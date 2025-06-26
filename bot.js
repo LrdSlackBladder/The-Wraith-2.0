@@ -1,6 +1,8 @@
+// Load environment and Discord client
 require('dotenv').config();
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 
+// Load modular response and trigger sets
 const responses = require('./data/responses');
 const triggers = require('./data/triggers');
 
@@ -14,6 +16,7 @@ const client = new Client({
   ]
 });
 
+// Constants and config
 const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
 const WRAITH_CREW_ROLE_ID = '1384826923653267568';
 const CAPTAIN_ROLE_ID = '1384826362186960999';
@@ -26,6 +29,11 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
+// Wait function for response delays
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
@@ -36,7 +44,7 @@ client.on('messageCreate', async (message) => {
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
 
-  // 🛡️ PRIVATE CHANNEL LOGIC (for your son)
+  // 🛡️ PRIVATE CHANNEL LOGIC
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
     const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
       triggerWords.some(trigger => content.includes(trigger))
@@ -52,13 +60,13 @@ client.on('messageCreate', async (message) => {
       reply = fallback[Math.floor(Math.random() * fallback.length)];
     }
 
+    await wait(2500);
     message.channel.send(`*${reply}*`);
     return;
   }
 
   // 🌐 PUBLIC CHANNEL LOGIC
   let matchedCategory = null;
-
   for (const [category, triggerWords] of Object.entries(triggers)) {
     if (triggerWords.some(trigger => content.includes(trigger))) {
       matchedCategory = category;
@@ -77,6 +85,7 @@ client.on('messageCreate', async (message) => {
 
     if (now - lastTime > cooldownMs) {
       const exclusiveReply = responses.loreExclusive[Math.floor(Math.random() * responses.loreExclusive.length)];
+      await wait(2500);
       message.channel.send(`*${exclusiveReply}*`);
       loreCooldown.set(message.author.id, now);
       return;
@@ -87,11 +96,12 @@ client.on('messageCreate', async (message) => {
   if (Math.random() <= 0.6) {
     const replyOptions = responses[matchedCategory];
     const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
+    await wait(2000 + Math.random() * 1500);
     message.channel.send(`*${reply}*`);
   }
 });
 
-// 🧹 DAILY CLEANUP: Clears old messages from CLEANUP_CHANNEL
+// 🧹 DAILY CLEANUP TASK
 setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
@@ -116,4 +126,3 @@ setInterval(async () => {
 }, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
-
