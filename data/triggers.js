@@ -11,7 +11,7 @@ module.exports = {
     'wrong channel', 'something’s off', 'can’t trace it', 'echo again'
   ],
   lore: [
-    'wraith', 'observer', 'perch', 'bitling', 'the fog', 'the port',
+    'wraith', 'observer', 'perch', 'the fog', 'the port',
     'anchor', 'drift', 'buffering wraith', 'legacy', 'glitch zone'
   ],
   existential: [
@@ -90,6 +90,13 @@ module.exports = {
       'squishy', 'buzzing', 'tingly', 'light hurt my eyes', 'itchy jumper',
       'my ears hurt', 'noise made me jump', 'uncomfortable', 'scratchy',
       'too fast', 'smells weird', 'can’t sit still', 'can’t focus because of it'
+    ],
+    reassurance: [
+      'help', 'worried', 'anxious', 'panic', 'calm me', 'reassure me',
+      'i’m scared', 'scared', 'afraid', 'nervous', 'overwhelmed',
+      'safe', 'not safe', 'can i talk', 'listen', 'trust me',
+      'guide me', 'comfort', 'what do i do', 'confused', 'i need help',
+      'feel lost', 'feel alone', 'nobody understands', 'nobody listens'
     ]
   }
 };
