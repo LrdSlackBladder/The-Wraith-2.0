@@ -46,11 +46,22 @@ client.once('ready', () => {
 // Message handling
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
+  console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
-  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+  // ⚡ Respond to public @-mentions automatically
+  if (
+    message.mentions.has(client.user) &&
+    message.channel.id !== PRIVATE_CHANNEL_ID
+  ) {
+    await wait(1500);
+    const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
+    return message.channel.send(`*${reply}*`);
+  }
+
+  // ...existing private/public logic follows...
+});
 
   // 🔒 PRIVATE CHANNEL
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
