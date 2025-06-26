@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 const responses = require('./data/responses');
 const triggers = require('./data/triggers');
 const http = require('http');
@@ -27,67 +27,67 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
-// Utility
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Keep-alive server for Railway-style hosts
+// Keep-alive (for Railway or similar)
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('The Wraith is watching...\n');
 }).listen(process.env.PORT || 3000);
 
-// Bot is ready
+// On ready
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
 
-// Message logic
+// Message handling
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-  const content = message.content.toLowerCase();
   userActivity.set(message.author.id, Date.now());
-
+  const content = message.content.toLowerCase();
   console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+
+  // Handle @-pings outside private
+  if (message.mentions.has(client.user) && message.channel.id !== PRIVATE_CHANNEL_ID) {
+    await wait(1500);
+    const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
+    return message.channel.send(`*${reply}*`);
+  }
 
   // 🔒 PRIVATE CHANNEL
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
-    // Respond to direct mentions
-    if (message.mentions.has(client.user)) {
-      const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
-      await wait(1500);
-      return message.channel.send(`*${reply}*`);
-    }
-
-    // Ambient fallback (e.g., “hello”, “testing”)
-    const ambientTriggers = triggers.ambient;
-    if (ambientTriggers.some(trigger => content.includes(trigger))) {
-      const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
-      await wait(1500);
-      return message.channel.send(`*${reply}*`);
-    }
-
-    // Match best-fit private theme
-    let bestMatch = null;
-    let maxMatches = 0;
+    let matchedCategory = null;
+    let highestMatchCount = 0;
 
     for (const [category, keywords] of Object.entries(triggers.privateTriggers)) {
-      const matchCount = keywords.filter(trigger => content.includes(trigger)).length;
-      if (matchCount > maxMatches) {
-        bestMatch = category;
-        maxMatches = matchCount;
+      const matchCount = keywords.filter(word => content.includes(word)).length;
+      if (matchCount > highestMatchCount) {
+        matchedCategory = category;
+        highestMatchCount = matchCount;
       }
     }
 
     let reply;
-    if (bestMatch && Array.isArray(responses.privateThemes?.[bestMatch])) {
-      const themedReplies = responses.privateThemes[bestMatch];
-      reply = themedReplies[Math.floor(Math.random() * themedReplies.length)];
+    if (matchedCategory && responses.privateThemes[matchedCategory]) {
+      const possibleReplies = responses.privateThemes[matchedCategory];
+      reply = possibleReplies[Math.floor(Math.random() * possibleReplies.length)];
+    } else {
+      const fallbackReplies = responses.private;
+      if (Array.isArray(fallbackReplies)) {
+        reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      }
     }
 
-    if (!reply && Array.isArray(responses.private)) {
-      reply = responses.private[Math.floor(Math.random() * responses.private.length)];
+    // Reactionary fallback (e.g. “Oh I didn’t know that”)
+    if (!reply && responses.reactionary) {
+      const possible = responses.reactionary.filter(r =>
+        r.triggers.some(t => content.includes(t))
+      );
+      if (possible.length > 0) {
+        reply = possible[Math.floor(Math.random() * possible.length)].text;
+      }
     }
 
     if (reply) {
@@ -98,12 +98,6 @@ client.on('messageCreate', async (message) => {
   }
 
   // 🌐 PUBLIC CHANNEL
-  if (message.mentions.has(client.user)) {
-    await wait(1500);
-    const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
-    return message.channel.send(`*${reply}*`);
-  }
-
   let matchedCategory = null;
   for (const [category, triggerWords] of Object.entries(triggers)) {
     if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))) {
@@ -114,7 +108,6 @@ client.on('messageCreate', async (message) => {
 
   if (!matchedCategory) return;
 
-  // 🧠 Lore Exclusive
   const isSignalWatcher = message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
   if (matchedCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
     const lastTime = loreCooldown.get(message.author.id) || 0;
@@ -130,7 +123,6 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 📡 General reply
   if (Math.random() <= 0.6) {
     const replyOptions = responses[matchedCategory];
     if (Array.isArray(replyOptions)) {
@@ -141,13 +133,13 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🧹 Cleanup task every 24h
+// 🧹 CLEANUP TASK
 setInterval(async () => {
-  try {
-    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
-    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+  const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
 
-    if (cleanupChannel && cleanupChannel.isTextBased()) {
+  if (cleanupChannel && cleanupChannel.isTextBased()) {
+    try {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
       const now = Date.now();
       const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
@@ -160,13 +152,13 @@ setInterval(async () => {
           await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
         }
       }
+    } catch (err) {
+      console.error('[WRAITH CLEANUP ERROR]', err);
     }
-  } catch (err) {
-    console.error('[WRAITH CLEANUP ERROR]', err);
   }
 }, 24 * 60 * 60 * 1000);
 
-// 🔒 Fail-safe crash logging
+// 🛠️ Crash Diagnostics
 process.on('uncaughtException', err => {
   console.error('Uncaught exception:', err);
 });
