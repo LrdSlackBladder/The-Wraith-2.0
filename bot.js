@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 const responses = require('./data/responses');
 const triggers = require('./data/triggers');
 const http = require('http');
@@ -27,49 +27,55 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
+// Utility: wait delay
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Keep-alive for Railway/GitHub deployment
+// Keep-alive ping (Railway workaround)
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('The Wraith is watching...\n');
 }).listen(process.env.PORT || 3000);
 
+// Startup log
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
 
+// Message handler
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-  userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
-  console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+  userActivity.set(message.author.id, Date.now());
+  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
-  // 🧲 Respond to @mention pings
+  // @ Mention Ping (ambient)
   if (
-    (message.content.includes(`<@${client.user.id}>`) ||
-     message.content.includes(`<@!${client.user.id}>`) ||
-     message.mentions.has(client.user)) &&
+    message.mentions.has(client.user) &&
     message.channel.id !== PRIVATE_CHANNEL_ID
   ) {
-    console.log(`[DEBUG] ${message.author.username} pinged The Wraith.`);
     await wait(1500);
     const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
     return message.channel.send(`*${reply}*`);
   }
 
-  // 🔒 PRIVATE CHANNEL
+  // PRIVATE CHANNEL LOGIC
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
-    const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
-      Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger.toLowerCase()))
-    );
+    let bestCategory = null;
+    let maxMatches = 0;
+
+    for (const [category, keywords] of Object.entries(triggers.privateTriggers)) {
+      const matches = keywords.filter(word => content.includes(word)).length;
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        bestCategory = category;
+      }
+    }
 
     let reply;
-    if (theme) {
-      const [category] = theme;
-      const themedReplies = responses.privateThemes?.[category];
+    if (bestCategory) {
+      const themedReplies = responses.privateThemes?.[bestCategory];
       if (Array.isArray(themedReplies) && themedReplies.length > 0) {
         reply = themedReplies[Math.floor(Math.random() * themedReplies.length)];
       }
@@ -86,20 +92,24 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // 🌐 PUBLIC CHANNEL
-  let matchedCategory = null;
-  for (const [category, triggerWords] of Object.entries(triggers)) {
-    if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger.toLowerCase()))) {
-      matchedCategory = category;
-      break;
+  // PUBLIC CHANNEL LOGIC
+  let bestMatchCategory = null;
+  let bestMatchScore = 0;
+
+  for (const [category, keywords] of Object.entries(triggers)) {
+    if (!Array.isArray(keywords)) continue;
+    const matchCount = keywords.filter(word => content.includes(word)).length;
+    if (matchCount > bestMatchScore) {
+      bestMatchScore = matchCount;
+      bestMatchCategory = category;
     }
   }
 
-  if (!matchedCategory) return;
+  if (!bestMatchCategory) return;
 
-  // 🧠 Lore Exclusive (Signal Watchers only)
+  // Lore cooldown if user is Signal Watcher
   const isSignalWatcher = message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
-  if (matchedCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
+  if (bestMatchCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
     const lastTime = loreCooldown.get(message.author.id) || 0;
     const now = Date.now();
     const cooldownMs = LORE_COOLDOWN_MINUTES * 60 * 1000;
@@ -113,9 +123,9 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 📡 General public response
+  // General response
   if (Math.random() <= 0.6) {
-    const replyOptions = responses[matchedCategory];
+    const replyOptions = responses[bestMatchCategory];
     if (Array.isArray(replyOptions)) {
       const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
       await wait(2000 + Math.random() * 1500);
@@ -124,7 +134,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🧹 Daily Cleanup Task
+// CLEANUP task every 24 hours
 setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
@@ -149,7 +159,7 @@ setInterval(async () => {
   }
 }, 24 * 60 * 60 * 1000);
 
-// 🔥 Crash diagnostics
+// Crash protection
 process.on('uncaughtException', err => {
   console.error('Uncaught exception:', err);
 });
