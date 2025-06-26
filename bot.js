@@ -60,11 +60,11 @@ client.on('messageCreate', async (message) => {
       ) ||
       /(tenor\.com\/view\/.+-gif-\d+)|(giphy\.com\/gifs\/)|(media\.discordapp\.net\/attachments\/.+\.gif)/i.test(content);
 
-    if (hasGif) {
-      const gifReply = responses.privateThemes.gifDetected[Math.floor(Math.random() * responses.privateThemes.gifDetected.length)];
-      await message.channel.sendTyping();
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
-      return message.channel.send(`*${gifReply}*`);
+    if (hasGif && Array.isArray(responses.gifDetected) && responses.gifDetected.length > 0) {
+  const gifReply = responses.gifDetected[Math.floor(Math.random() * responses.gifDetected.length)];
+  await message.channel.sendTyping();
+  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+  return message.channel.send(`*${gifReply}*`);
     }
 
     // 🧠 Reactionary response (best match logic)
