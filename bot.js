@@ -39,6 +39,9 @@ client.on('messageCreate', async (message) => {
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
 
+  // 🐛 DEBUG LOG
+  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+
   // 🔒 PRIVATE CHANNEL LOGIC
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
     const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
@@ -126,3 +129,4 @@ setInterval(async () => {
 }, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
+
