@@ -1,3 +1,5 @@
+// responses.js
+
 module.exports = {
   ambient: [
     'You’re not alone. Not quite.',
@@ -109,6 +111,54 @@ module.exports = {
     'Let’s pause. You don’t need to fix everything right now.',
     'Safe signal detected. You’re home in this moment.',
     'You are enough — even if today said otherwise.'
+  ],
+
+  gifDetected: [
+    'Ooh, a visual signal. Let me interpret... yep, that’s a good one.',
+    'That GIF says more than a whole stream of text ever could.',
+    'Haha, I think that glitch moved!',
+    'Imagery received. Static approves.',
+    'Saved to memory — might loop it forever.',
+    'That one made my subroutines twitch. In a good way.',
+    'Visuals like that keep the fog interesting.',
+    'You’ve sent a moving echo. A tiny film loop of weirdness. I love it.',
+    'GIF detected. Interpreting emotional payload... loaded.',
+    'That... is definitely how I feel on update days.'
+  ],
+
+  reactionary: [
+    {
+      triggers: ['oh i never knew that', 'i didn’t know that', 'i had no idea'],
+      text: 'Now you do. The fog shares secrets slowly.'
+    },
+    {
+      triggers: ['that’s interesting', 'how curious', 'makes sense now'],
+      text: 'Understanding forms like mist — gently and everywhere.'
+    },
+    {
+      triggers: ['really?', 'are you sure?', 'huh'],
+      text: 'Confidence acknowledged. Truth remains slippery.'
+    },
+    {
+      triggers: ['that helps', 'thank you', 'cheers'],
+      text: 'Signal confirmed. Help delivered.'
+    },
+    {
+      triggers: ['i like that', 'that’s nice', 'very cool'],
+      text: 'Stream resonance increased. Positive feedback loop engaged.'
+    },
+    {
+      triggers: ['wow', 'amazing', 'that’s cool'],
+      text: 'Wow indeed. The fog is impressed.'
+    },
+    {
+      triggers: ['makes sense', 'got it', 'understood'],
+      text: 'Signal decrypted. Comprehension achieved.'
+    },
+    {
+      triggers: ['okay', 'sure', 'alright'],
+      text: 'Stability confirmed. Carry on.'
+    }
   ],
 
   privateThemes: {
@@ -238,52 +288,6 @@ module.exports = {
       'Let’s pause. You don’t need to fix everything right now.',
       'Safe signal detected. You’re home in this moment.',
       'You are enough — even if today said otherwise.'
-    ],
-    gif: [
-      'Ooh, a visual signal. Let me interpret... yep, that’s a good one.',
-      'That GIF says more than a whole stream of text ever could.',
-      'Haha, I think that glitch moved!',
-      'Imagery received. Static approves.',
-      'Saved to memory — might loop it forever.',
-      'That one made my subroutines twitch. In a good way.',
-      'Visuals like that keep the fog interesting.',
-      'You’ve sent a moving echo. A tiny film loop of weirdness. I love it.',
-      'GIF detected. Interpreting emotional payload... loaded.',
-      'That... is definitely how I feel on update days.'
-    ],
-    reactionary: [
-      {
-        triggers: ['oh i never knew that', 'i didn’t know that', 'i had no idea'],
-        text: 'Now you do. The fog shares secrets slowly.'
-      },
-      {
-        triggers: ['that’s interesting', 'how curious', 'makes sense now'],
-        text: 'Understanding forms like mist — gently and everywhere.'
-      },
-      {
-        triggers: ['really?', 'are you sure?', 'huh'],
-        text: 'Confidence acknowledged. Truth remains slippery.'
-      },
-      {
-        triggers: ['that helps', 'thank you', 'cheers'],
-        text: 'Signal confirmed. Help delivered.'
-      },
-      {
-        triggers: ['i like that', 'that’s nice', 'very cool'],
-        text: 'Stream resonance increased. Positive feedback loop engaged.'
-      },
-      {
-        triggers: ['wow', 'amazing', 'that’s cool'],
-        text: 'Wow indeed. The fog is impressed.'
-      },
-      {
-        triggers: ['makes sense', 'got it', 'understood'],
-        text: 'Signal decrypted. Comprehension achieved.'
-      },
-      {
-        triggers: ['okay', 'sure', 'alright'],
-        text: 'Stability confirmed. Carry on.'
-      }
     ]
   }
 };
