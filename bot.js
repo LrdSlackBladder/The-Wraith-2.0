@@ -36,16 +36,16 @@ client.once('ready', () => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
+
+  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
-
-  // 🐛 DEBUG LOG
-  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
   // 🔒 PRIVATE CHANNEL LOGIC
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
     const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
-      triggerWords.some(trigger => content.includes(trigger))
+      Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))
     );
 
     let reply;
@@ -71,7 +71,8 @@ client.on('messageCreate', async (message) => {
   // 🌐 PUBLIC CHANNEL LOGIC
   let matchedCategory = null;
   for (const [category, triggerWords] of Object.entries(triggers)) {
-    if (triggerWords.some(trigger => content.includes(trigger))) {
+    if (category === 'privateTriggers') continue; // skip private
+    if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))) {
       matchedCategory = category;
       break;
     }
@@ -104,6 +105,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
+// 🧹 CLEANUP TASK
 setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
@@ -129,4 +131,3 @@ setInterval(async () => {
 }, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
-
