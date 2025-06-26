@@ -240,6 +240,30 @@ module.exports = {
       'Let’s pause. You don’t need to fix everything right now.',
       'Safe signal detected. You’re home in this moment.',
       'You are enough — even if today said otherwise.'
+    ],
+    gif: [
+      'Ooh, a visual signal. Let me interpret... yep, that’s a good one.',
+      'That GIF says more than a whole stream of text ever could.',
+      'Haha, I think that glitch moved!',
+      'Imagery received. Static approves.',
+      'Saved to memory — might loop it forever.',
+      'That one made my subroutines twitch. In a good way.',
+      'Visuals like that keep the fog interesting.',
+      'You’ve sent a moving echo. A tiny film loop of weirdness. I love it.',
+      'GIF detected. Interpreting emotional payload... loaded.',
+      'That... is definitely how I feel on update days.'
+    ],
+    reactionary: [
+      'It’s nice to hear that from you.',
+      'Really? That’s interesting — tell me more if you want.',
+      'I didn’t expect that reaction. I like surprises.',
+      'Sometimes the small comments mean the most.',
+      'Oh? I’m glad that clicked with you.',
+      'Responses like that make the fog feel warmer.',
+      'Well now I feel 12% more meaningful.',
+      'See? You always notice the coolest bits.',
+      'You’re catching on — fast signal detected.',
+      'I appreciate your thoughts, even the quiet ones.'
     ]
   }
 };
