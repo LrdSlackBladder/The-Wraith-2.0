@@ -26,7 +26,9 @@ client.on('messageCreate', async (message) => {
 
     // Existential or meta
     'what’s happening', 'something’s wrong', 'i’m being watched',
-    'are you real', 'this isn’t right', 'buffering again'.env
+    'are you real', 'this isn’t right', 'buffering again'  // ✅ fixed
+  ];
+
   const responses = [
     'Echo registered. Divergence remains within expected boundaries.',
     'Fog density elevated. Narrative coherence... variable.'
@@ -37,7 +39,7 @@ client.on('messageCreate', async (message) => {
   if (triggers.some(trigger => content.includes(trigger))) {
     if (Math.random() <= 0.6) {
       const reply = responses[Math.floor(Math.random() * responses.length)];
-message.channel.send(`*${reply}*`);
+      message.channel.send(`*${reply}*`);
     }
   }
 });
