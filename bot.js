@@ -55,13 +55,18 @@ client.on('messageCreate', async (message) => {
       || message.content.includes('.gif');
 
     if (hasGif) {
-      const gifReply = responses.gifDetected[Math.floor(Math.random() * responses.gifDetected.length)];
-      return message.channel.send(`*${gifReply}*`);
-    }
+  const gifReply = responses.privateThemes.gif[Math.floor(Math.random() * responses.privateThemes.gif.length)];
+  await message.channel.sendTyping();
+  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+  return message.channel.send(`*${gifReply}*`);
+}
+
 
     // 🧠 Reactionary response match
-   for (const r of responses.privateThemes.reactionary) {
+  for (const r of responses.reactionary) {
   if (r.triggers.some(t => content.includes(t))) {
+    await message.channel.sendTyping();
+    await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 1500));
     return message.channel.send(`*${r.text}*`);
   }
 }
