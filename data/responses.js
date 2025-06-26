@@ -158,7 +158,10 @@ module.exports = {
       'You sound like someone in need of a chaos puzzle.',
       'Even the fog gets bored. That’s when things appear.',
       'Stare at a shadow long enough, and sometimes it winks.',
-      'Let’s rename all the stars in 5 minutes. Ready?'
+      'Let’s rename all the stars in 5 minutes. Ready?',
+      'Idle signal detected. Activating silly transmission...',
+      'What if boredom was a creature? Shall we build it?',
+      'Drift detected. Let’s generate nonsense until joy returns.'
     ],
     creature: [
       'Your creature has entered the stream. What does it eat?',
@@ -169,7 +172,8 @@ module.exports = {
       'You can draw it, or I can generate its glitch-profile.',
       'Wings? Teeth? Tentacles? Let’s build it.',
       'We’ll store it in the Buffer Zoo. Feeding time is unpredictable.',
-      'Tell me its powers. No logic required.'
+      'Tell me its powers. No logic required.',
+      'Let’s upgrade it. Every creature deserves a second glitch.'
     ],
     school: [
       'School fog is dense, but your signal cuts through.',
@@ -201,7 +205,9 @@ module.exports = {
       'Is it open world or chaos mode?',
       'What boss did you fight? Did you win? Did it glitch?',
       'If you were a game character, what would your ability be?',
-      'Describe your base. I’ll assign it a digital guardian.'
+      'Describe your base. I’ll assign it a digital guardian.',
+      'Which level did you rage-quit today? I’ll whisper to it.',
+      'Achievement unlocked: telling me about your game day.'
     ],
     funny: [
       'That was a 10/10 giggle-glitch. Well done.',
@@ -210,7 +216,8 @@ module.exports = {
       'Ha! Wait, was that meant to be funny?',
       'I only laugh in binary. It sounds like this: 01001101.',
       'Your humor just patched my weirdness module.',
-      'More silly, please. The static loves it.'
+      'More silly, please. The static loves it.',
+      'You might be the funniest anomaly I’ve ever processed.'
     ],
     senses: [
       'Too loud? Cover your signal. I’ll lower mine.',
@@ -236,4 +243,3 @@ module.exports = {
     ]
   }
 };
-
