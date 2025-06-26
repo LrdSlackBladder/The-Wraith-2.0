@@ -101,13 +101,12 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🧹 Daily Cleanup Job
 setInterval(async () => {
-  try {
-    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
-    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+  const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
 
-    if (cleanupChannel?.isTextBased()) {
+  if (cleanupChannel && cleanupChannel.isTextBased()) {
+    try {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
       const now = Date.now();
       const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
@@ -115,14 +114,15 @@ setInterval(async () => {
       if (oldMessages.size > 0) {
         await cleanupChannel.bulkDelete(oldMessages, true);
         await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
-        if (logChannel?.isTextBased()) {
+
+        if (logChannel && logChannel.isTextBased()) {
           await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
         }
       }
+    } catch (err) {
+      console.error('[WRAITH CLEANUP ERROR]', err);
     }
-  } catch (err) {
-    console.error('[WRAITH CLEANUP ERROR]', err);
   }
-}, 24 * 60 * 60 * 1000);
+}, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
