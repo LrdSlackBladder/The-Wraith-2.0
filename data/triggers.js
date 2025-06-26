@@ -1,3 +1,5 @@
+// triggers.js
+
 module.exports = {
   // 🔊 Public-facing triggers
   ambient: [
@@ -100,3 +102,4 @@ module.exports = {
     ]
   }
 };
+
