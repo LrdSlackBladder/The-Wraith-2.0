@@ -1,5 +1,3 @@
-// responses.js
-
 module.exports = {
   ambient: [
     'You’re not alone. Not quite.',
@@ -253,40 +251,39 @@ module.exports = {
       'GIF detected. Interpreting emotional payload... loaded.',
       'That... is definitely how I feel on update days.'
     ],
-  
-  // Keyword-triggered reactionary responses — used ONLY in private channel
-  reactionary: [
-    {
-      triggers: ['oh i never knew that', 'i didn’t know that', 'i had no idea'],
-      text: 'Now you do. The fog shares secrets slowly.'
-    },
-    {
-      triggers: ['that’s interesting', 'how curious', 'makes sense now'],
-      text: 'Understanding forms like mist — gently and everywhere.'
-    },
-    {
-      triggers: ['really?', 'are you sure?', 'huh'],
-      text: 'Confidence acknowledged. Truth remains slippery.'
-    },
-    {
-      triggers: ['that helps', 'thank you', 'cheers'],
-      text: 'Signal confirmed. Help delivered.'
-    },
-    {
-      triggers: ['i like that', 'that’s nice', 'very cool'],
-      text: 'Stream resonance increased. Positive feedback loop engaged.'
-    },
-    {
-      triggers: ['wow', 'amazing', 'that’s cool'],
-      text: 'Wow indeed. The fog is impressed.'
-    },
-    {
-      triggers: ['makes sense', 'got it', 'understood'],
-      text: 'Signal decrypted. Comprehension achieved.'
-    },
-    {
-      triggers: ['okay', 'sure', 'alright'],
-      text: 'Stability confirmed. Carry on.'
-    }
-  ]
+    reactionary: [
+      {
+        triggers: ['oh i never knew that', 'i didn’t know that', 'i had no idea'],
+        text: 'Now you do. The fog shares secrets slowly.'
+      },
+      {
+        triggers: ['that’s interesting', 'how curious', 'makes sense now'],
+        text: 'Understanding forms like mist — gently and everywhere.'
+      },
+      {
+        triggers: ['really?', 'are you sure?', 'huh'],
+        text: 'Confidence acknowledged. Truth remains slippery.'
+      },
+      {
+        triggers: ['that helps', 'thank you', 'cheers'],
+        text: 'Signal confirmed. Help delivered.'
+      },
+      {
+        triggers: ['i like that', 'that’s nice', 'very cool'],
+        text: 'Stream resonance increased. Positive feedback loop engaged.'
+      },
+      {
+        triggers: ['wow', 'amazing', 'that’s cool'],
+        text: 'Wow indeed. The fog is impressed.'
+      },
+      {
+        triggers: ['makes sense', 'got it', 'understood'],
+        text: 'Signal decrypted. Comprehension achieved.'
+      },
+      {
+        triggers: ['okay', 'sure', 'alright'],
+        text: 'Stability confirmed. Carry on.'
+      }
+    ]
+  }
 };
