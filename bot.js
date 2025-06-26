@@ -1,8 +1,5 @@
-// Load environment and Discord client
 require('dotenv').config();
-const { Client, GatewayIntentBits, Events } = require('discord.js');
-
-// Load modular response and trigger sets
+const { Client, GatewayIntentBits } = require('discord.js');
 const responses = require('./data/responses');
 const triggers = require('./data/triggers');
 
@@ -16,7 +13,7 @@ const client = new Client({
   ]
 });
 
-// Constants and config
+// Constants
 const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
 const WRAITH_CREW_ROLE_ID = '1384826923653267568';
 const CAPTAIN_ROLE_ID = '1384826362186960999';
@@ -29,7 +26,6 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
-// Wait function for response delays
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -40,11 +36,10 @@ client.once('ready', () => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
 
-  // 🛡️ PRIVATE CHANNEL LOGIC
+  // 🔒 PRIVATE CHANNEL LOGIC
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
     const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
       triggerWords.some(trigger => content.includes(trigger))
@@ -53,15 +48,20 @@ client.on('messageCreate', async (message) => {
     let reply;
     if (theme) {
       const [category] = theme;
-      const themedReplies = responses.privateThemes[category];
-      reply = themedReplies[Math.floor(Math.random() * themedReplies.length)];
-    } else {
-      const fallback = responses.private;
-      reply = fallback[Math.floor(Math.random() * fallback.length)];
+      const themedReplies = responses.privateThemes?.[category];
+      if (Array.isArray(themedReplies) && themedReplies.length > 0) {
+        reply = themedReplies[Math.floor(Math.random() * themedReplies.length)];
+      }
     }
 
-    await wait(2500);
-    message.channel.send(`*${reply}*`);
+    if (!reply && Array.isArray(responses.private)) {
+      reply = responses.private[Math.floor(Math.random() * responses.private.length)];
+    }
+
+    if (reply) {
+      await wait(2500);
+      message.channel.send(`*${reply}*`);
+    }
     return;
   }
 
@@ -76,7 +76,7 @@ client.on('messageCreate', async (message) => {
 
   if (!matchedCategory) return;
 
-  // 🎯 Lore Exclusive (Signal Watcher role & cooldown)
+  // 🧠 Lore Exclusive Handling (Signal Watchers only)
   const isSignalWatcher = message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
   if (matchedCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
     const lastTime = loreCooldown.get(message.author.id) || 0;
@@ -92,7 +92,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 📡 Normal matched response
+  // 🤖 Normal Public Response
   if (Math.random() <= 0.6) {
     const replyOptions = responses[matchedCategory];
     const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
@@ -101,13 +101,13 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🧹 DAILY CLEANUP TASK
+// 🧹 Daily Cleanup Job
 setInterval(async () => {
-  const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
-  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+  try {
+    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
 
-  if (cleanupChannel && cleanupChannel.isTextBased()) {
-    try {
+    if (cleanupChannel?.isTextBased()) {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
       const now = Date.now();
       const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
@@ -115,14 +115,14 @@ setInterval(async () => {
       if (oldMessages.size > 0) {
         await cleanupChannel.bulkDelete(oldMessages, true);
         await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
-        if (logChannel && logChannel.isTextBased()) {
+        if (logChannel?.isTextBased()) {
           await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
         }
       }
-    } catch (err) {
-      console.error('[WRAITH CLEANUP ERROR]', err);
     }
+  } catch (err) {
+    console.error('[WRAITH CLEANUP ERROR]', err);
   }
-}, 24 * 60 * 60 * 1000); // Every 24 hours
+}, 24 * 60 * 60 * 1000);
 
 client.login(process.env.DISCORD_TOKEN);
