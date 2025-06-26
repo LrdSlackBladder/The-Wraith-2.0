@@ -253,17 +253,40 @@ module.exports = {
       'GIF detected. Interpreting emotional payload... loaded.',
       'That... is definitely how I feel on update days.'
     ],
-    reactionary: [
-      'It’s nice to hear that from you.',
-      'Really? That’s interesting — tell me more if you want.',
-      'I didn’t expect that reaction. I like surprises.',
-      'Sometimes the small comments mean the most.',
-      'Oh? I’m glad that clicked with you.',
-      'Responses like that make the fog feel warmer.',
-      'Well now I feel 12% more meaningful.',
-      'See? You always notice the coolest bits.',
-      'You’re catching on — fast signal detected.',
-      'I appreciate your thoughts, even the quiet ones.'
-    ]
-  }
+  
+  // Keyword-triggered reactionary responses — used ONLY in private channel
+  reactionary: [
+    {
+      triggers: ['oh i never knew that', 'i didn’t know that', 'i had no idea'],
+      text: 'Now you do. The fog shares secrets slowly.'
+    },
+    {
+      triggers: ['that’s interesting', 'how curious', 'makes sense now'],
+      text: 'Understanding forms like mist — gently and everywhere.'
+    },
+    {
+      triggers: ['really?', 'are you sure?', 'huh'],
+      text: 'Confidence acknowledged. Truth remains slippery.'
+    },
+    {
+      triggers: ['that helps', 'thank you', 'cheers'],
+      text: 'Signal confirmed. Help delivered.'
+    },
+    {
+      triggers: ['i like that', 'that’s nice', 'very cool'],
+      text: 'Stream resonance increased. Positive feedback loop engaged.'
+    },
+    {
+      triggers: ['wow', 'amazing', 'that’s cool'],
+      text: 'Wow indeed. The fog is impressed.'
+    },
+    {
+      triggers: ['makes sense', 'got it', 'understood'],
+      text: 'Signal decrypted. Comprehension achieved.'
+    },
+    {
+      triggers: ['okay', 'sure', 'alright'],
+      text: 'Stability confirmed. Carry on.'
+    }
+  ]
 };
