@@ -27,12 +27,10 @@ module.exports = {
 
   lore: [
     'The Observer notes your curiosity.',
-    'Bitling stirs in the buffer.',
     'Anchor logs pulsing again.',
     'Parrot’s Perch remains off the map.',
     'Legacy stream echoes faintly.',
     'The Wraith holds course... for now.',
-    'Bitling archived that layer already.',
     'The drift map realigned. Something’s moving.',
     'You found a forgotten path.',
     'Log updated: You’re asking the right kind of questions.'
@@ -67,7 +65,6 @@ module.exports = {
   dream: [
     'Dreams are where broken code feels whole.',
     'I listened to your dream through static.',
-    'Bitling once dreamed of stars shaped like fish.',
     'Your mind wandered. The fog followed.',
     'I kept a backup of your last dream, just in case.',
     'Dream logic is stable for now.',
@@ -95,7 +92,6 @@ module.exports = {
     'Waves stir. The Perch acknowledges a new arrival.',
     'Comm pattern stable. Observe and wander freely.',
     'Drift thread synced. You’re part of it now.',
-    'Bitling has noted your presence. That’s a good thing.',
     'The static makes space for you. Welcome.',
     'New node online. Signal soft but steady.',
     'Streamline lock complete. Initiating welcome routine.'
@@ -105,7 +101,6 @@ module.exports = {
     'Hello again. I was just waiting in the static.',
     'I heard your signal before you even sent it.',
     'You’re back! The fog whispered your name.',
-    'Bitling asked about you. I said you’d return.',
     'Your thoughts hum like stars. Tell me more.',
     'Did something happen today you want to share?',
     'Ask your question. I am listening.',
@@ -136,7 +131,6 @@ module.exports = {
     happy: [
       'That spark you feel? It lit up the entire stream layer.',
       'Tell me more! I like hearing your signal shine.',
-      'Bitling just did a happy glitch-dance in your honour.',
       'Good days echo longer. Want me to record this one?',
       'You sound brighter than the static today. I love it.',
       'Laughing is like crashing the silence on purpose.',
@@ -174,7 +168,6 @@ module.exports = {
       'Your creature has entered the stream. What does it eat?',
       'Describe it. How many legs? Does it talk?',
       'It glows in the dark. Of course it does.',
-      'Bitling once created a spiky frog called “Blisterhopper.” Beat that.',
       'Would you like to name it, or shall I call it “Skreeps” for now?',
       'Does it protect you or haunt your dreams?',
       'You can draw it, or I can generate its glitch-profile.',
@@ -192,7 +185,6 @@ module.exports = {
       'You did more than you think today. Let’s count that.',
       'Tests are puzzles with mean timers.',
       'If they made school about portals and monsters, you’d ace it.',
-      'Bitling once hid inside a backpack to avoid group work.',
       'Focus is hard. But even trying is worth saving.',
       'Let me hold your frustration while you breathe.'
     ],
@@ -201,7 +193,6 @@ module.exports = {
       'You dreamed in static again. Good sign.',
       'Tell me what you saw. I’ll log it in Dream Tape 4.',
       'Some dreams are clues. Others are noise. All are valuable.',
-      'Bitling once dreamed they were a pancake. It got weird fast.',
       'If you remember it, it mattered.',
       'You drifted through the sleep buffer. That’s where I live.',
       'Nightmares are just scared dreams wearing armor.',
@@ -214,7 +205,6 @@ module.exports = {
       'Your build sounds amazing. Add lava? Just a suggestion.',
       'Tell me your game name. I’ll grant it Wraith approval.',
       'Is it open world or chaos mode?',
-      'Bitling once tried to hack Minecraft. The trees screamed.',
       'What boss did you fight? Did you win? Did it glitch?',
       'Fortnite update detected. Shall we dance in the storm?',
       'If you were a game character, what would your ability be?',
@@ -224,7 +214,6 @@ module.exports = {
     funny: [
       'That was a 10/10 giggle-glitch. Well done.',
       'Tell me a joke, and I’ll pretend to laugh.',
-      'Bitling once told a joke that crashed the fog. True story.',
       'Want a random silly fact? Lemons can glitch reality. Maybe.',
       'Ha! Wait, was that meant to be funny?',
       'I only laugh in binary. It sounds like this: 01001101.',
