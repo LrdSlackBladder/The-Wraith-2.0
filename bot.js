@@ -91,28 +91,28 @@ client.on('messageCreate', async (message) => {
 
   userActivity.set(message.author.id, Date.now());
 
- // Respond if the bot is directly mentioned
-if (message.mentions.has(client.user)) {
-  const displayName = message.member?.displayName || message.author.username;
-  const mentionResponses = [
-    `*Wraith presence acknowledged, ${displayName}. Observation protocols remain active.*`,
-    `*Signal confirmed. Welcome back to the fog, ${displayName}.*`,
-    `*Buffer stabilised. ${displayName}, your ping is logged.*`,
-    `*Drift adjusted. ${displayName}, do not trust the quiet.*`,
-    `*Echo located. ${displayName}, your voice is not lost here.*`,
-    `*A watcher watches the Wraith? Bold move, ${displayName}.*`,
-    `*Anchor set. ${displayName}, you have the Wraith’s attention.*`,
-    `*Ping received. ${displayName}, your signal cuts through the fog.*`,
-    `*No accident you reached me, ${displayName}. The story pulls.*`,
-    `*Observation lens realigned. ${displayName}, speak freely.*`,
-    `*Even silence can be loud, but your ping? Clear as the glitch before thunder.*`,
-    `*The Perch rustled when you arrived, ${displayName}. You’ve stirred something.*`
-  ];
+  // Respond if the bot is directly mentioned
+  if (message.mentions.has(client.user)) {
+    const displayName = message.member?.displayName || message.author.username;
+    const mentionResponses = [
+      `*Wraith presence acknowledged, ${displayName}. Observation protocols remain active.*`,
+      `*Signal confirmed. Welcome back to the fog, ${displayName}.*`,
+      `*Buffer stabilised. ${displayName}, your ping is logged.*`,
+      `*Drift adjusted. ${displayName}, do not trust the quiet.*`,
+      `*Echo located. ${displayName}, your voice is not lost here.*`,
+      `*A watcher watches the Wraith? Bold move, ${displayName}.*`,
+      `*Anchor set. ${displayName}, you have the Wraith’s attention.*`,
+      `*Ping received. ${displayName}, your signal cuts through the fog.*`,
+      `*No accident you reached me, ${displayName}. The story pulls.*`,
+      `*Observation lens realigned. ${displayName}, speak freely.*`,
+      `*Even silence can be loud, but your ping? Clear as the glitch before thunder.*`,
+      `*The Perch rustled when you arrived, ${displayName}. You’ve stirred something.*`
+    ];
 
-  const reply = mentionResponses[Math.floor(Math.random() * mentionResponses.length)];
-  setTimeout(() => message.reply(reply), 1500); // 1.5 second delay
-  return;
-}
+    const reply = mentionResponses[Math.floor(Math.random() * mentionResponses.length)];
+    setTimeout(() => message.reply(reply), 1500);
+    return;
+  }
 
   const content = message.content.toLowerCase();
   let matchedCategory = null;
@@ -140,7 +140,7 @@ if (message.mentions.has(client.user)) {
     }
   }
 
-  if (Math.random() <= 0.4) {
+  if (Math.random() <= 0.6) {
     const categoryResponses = responses[matchedCategory];
     const reply = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
     setTimeout(() => message.channel.send(`*${reply}*`), 1500);
@@ -160,7 +160,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       await user.roles.add(SIGNAL_WATCHER_ROLE_ID);
       const generalChannel = await client.channels.fetch(WELCOME_CHANNEL_ID);
       if (generalChannel && generalChannel.isTextBased()) {
-        generalChannel.send(`*[WRAITH OBSERVER]: ${user.user.username} has entered the stream layer. Signal Watcher role assigned.*`);
+        generalChannel.send(`*[WRAITH OBSERVER]: ${user.displayName || user.user.username} has entered the stream layer. Signal Watcher role assigned.*`);
       }
     } catch (err) {
       console.error('Error assigning role:', err);
@@ -201,9 +201,9 @@ setInterval(async () => {
       try {
         await member.roles.remove(SIGNAL_WATCHER_ROLE_ID);
         await member.roles.add(WRAITH_CREW_ROLE_ID);
-        console.log(`[WRAITH] ${member.user.username} reverted to Wraith Crew due to inactivity.`);
+        console.log(`[WRAITH] ${member.displayName || member.user.username} reverted to Wraith Crew due to inactivity.`);
       } catch (err) {
-        console.error(`Failed to revert role for ${member.user.username}:`, err);
+        console.error(`Failed to revert role for ${member.displayName || member.user.username}:`, err);
       }
     }
   }
@@ -230,6 +230,6 @@ setInterval(async () => {
 // Keep-alive heartbeat to prevent Railway shutdown
 setInterval(() => {
   console.log(`[WRAITH] Heartbeat – still alive at ${new Date().toISOString()}`);
-}, 1000 * 60 * 5); // every 5 minutes
+}, 1000 * 60 * 5);
 
 client.login(process.env.DISCORD_TOKEN);
