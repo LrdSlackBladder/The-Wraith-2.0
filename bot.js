@@ -1,7 +1,8 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 const responses = require('./data/responses');
 const triggers = require('./data/triggers');
+const http = require('http');
 
 const client = new Client({
   intents: [
@@ -26,23 +27,32 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
+// Utility: wait delay
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Keep-alive: Respond to pings (prevents Railway from thinking it's idle)
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('The Wraith is watching...\n');
+}).listen(process.env.PORT || 3000);
+
+// Startup log
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
 
+// Message handling
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-
-  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
   userActivity.set(message.author.id, Date.now());
   const content = message.content.toLowerCase();
 
-  // 🔒 PRIVATE CHANNEL LOGIC
+  console.log(`[DEBUG] Received message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+
+  // 🔒 PRIVATE CHANNEL
   if (message.channel.id === PRIVATE_CHANNEL_ID) {
     const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
       Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))
@@ -68,10 +78,9 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // 🌐 PUBLIC CHANNEL LOGIC
+  // 🌐 PUBLIC CHANNEL
   let matchedCategory = null;
   for (const [category, triggerWords] of Object.entries(triggers)) {
-    if (category === 'privateTriggers') continue; // skip private
     if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))) {
       matchedCategory = category;
       break;
@@ -96,12 +105,14 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 🤖 Normal Public Response
+  // 📡 General Response
   if (Math.random() <= 0.6) {
     const replyOptions = responses[matchedCategory];
-    const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
-    await wait(2000 + Math.random() * 1500);
-    message.channel.send(`*${reply}*`);
+    if (Array.isArray(replyOptions)) {
+      const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
+      await wait(2000 + Math.random() * 1500);
+      message.channel.send(`*${reply}*`);
+    }
   }
 });
 
@@ -128,6 +139,14 @@ setInterval(async () => {
       console.error('[WRAITH CLEANUP ERROR]', err);
     }
   }
-}, 24 * 60 * 60 * 1000); // Every 24 hours
+}, 24 * 60 * 60 * 1000);
+
+// 🛠️ Crash Diagnostics
+process.on('uncaughtException', err => {
+  console.error('Uncaught exception:', err);
+});
+process.on('unhandledRejection', err => {
+  console.error('Unhandled rejection:', err);
+});
 
 client.login(process.env.DISCORD_TOKEN);
