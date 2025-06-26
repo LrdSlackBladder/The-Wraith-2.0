@@ -3,94 +3,105 @@
 module.exports = {
   // 🔊 Public-facing triggers
   ambient: [
-    'hello', 'hi', 'hey', 'yo', 'hiya', 'greetings', 'anyone', 'here', 'test',
-    'you', 'there', 'who', 'this', 'where', 'alone', 'quiet', 'hear', 'still',
-    'present', 'online', 'respond', 'checking in', 'awake', 'listening'
+    'hello', 'hi', 'hey', 'anyone', 'there', 'testing', 'echo',
+    'still', 'quiet', 'alone', 'speak', 'respond', 'talk', 'message',
+    'who', 'this', 'where', 'presence', 'signal'
   ],
+
   unsettling: [
-    'heard', 'moved', 'noise', 'glitch', 'strange', 'lost', 'signal',
-    'wrong', 'off', 'trace', 'echo', 'shiver', 'static', 'creep', 'lurking',
-    'unseen', 'watching', 'shift', 'pulse', 'flicker', 'uncanny', 'unsettling'
+    'heard', 'something', 'noise', 'moved', 'glitch', 'glitched',
+    'strange', 'weird', 'wrong', 'off', 'echo', 'trace', 'disturbance',
+    'unusual', 'flicker', 'creepy', 'disruption'
   ],
+
   lore: [
     'wraith', 'observer', 'perch', 'fog', 'port', 'anchor', 'drift',
-    'legacy', 'buffering', 'glitch', 'zone', 'signal', 'stream',
-    'phantom', 'echoes', 'layer', 'channel', 'threads', 'rift', 'remnant'
+    'legacy', 'glitch', 'buffer', 'stream', 'layer', 'signal', 'echoes'
   ],
+
   existential: [
-    'happening', 'wrong', 'watched', 'real', 'dreaming', 'why', 'what',
-    'how', 'exist', 'meaning', 'alone', 'purpose', 'truth', 'question',
-    'awake', 'sense', 'lost', 'everything', 'confused'
+    'real', 'watched', 'happening', 'right', 'dreaming', 'alone',
+    'exist', 'reality', 'wrong', 'perception', 'why', 'what', 'meaning',
+    'matter', 'question', 'lost', 'forgotten'
   ],
+
   glitch: [
-    'error', 'bug', 'broken', 'corrupt', 'scrambled', 'off', 'weird',
-    'glitch', 'detected', 'fail', 'crash', 'malfunction', 'code',
-    'reset', 'reload', 'system', 'issue', 'fault'
+    'error', 'bug', 'broken', 'corrupt', 'scrambled', 'pattern', 'glitch',
+    'weird', 'issue', 'malfunction', 'fault', 'misplaced', 'crash', 'code',
+    'debug', 'problem'
   ],
+
   dream: [
-    'dream', 'nightmare', 'visions', 'asleep', 'sleep', 'woke', 'scared',
-    'saw', 'fog', 'floating', 'surreal', 'strange', 'sleeping', 'felt',
-    'sinking', 'dreamed', 'unreal', 'phantom', 'vision', 'echoes'
+    'dream', 'sleep', 'asleep', 'nightmare', 'visions', 'fog', 'drifted',
+    'dreamed', 'woke', 'mind', 'sleeping', 'memory', 'saw', 'vision', 'felt'
   ],
 
   // 🔒 Private channel triggers (for your son)
   privateTriggers: {
     sad: [
-      'sad', 'angry', 'upset', 'cry', 'bad', 'mean', 'annoyed',
-      'frustrated', 'ignored', 'hate', 'wrong', 'not', 'okay', 'messed',
-      'shouted', 'weird', 'hurt', 'feelings', 'mad', 'alone'
+      'sad', 'angry', 'upset', 'cry', 'mean', 'frustrated', 'hate',
+      'ignored', 'shouted', 'unfair', 'messed', 'bad', 'hurt', 'mad',
+      'not okay', 'they were mean', 'nobody', 'feel weird', 'hurt feelings'
     ],
+
     happy: [
-      'happy', 'fun', 'yay', 'excited', 'laughing', 'cool', 'great',
-      'best', 'awesome', 'good', 'love', 'won', 'played', 'made',
-      'smiling', 'cheered', 'joke', 'laugh', 'nice'
+      'happy', 'fun', 'excited', 'laugh', 'yay', 'cool', 'great',
+      'awesome', 'smiling', 'won', 'played', 'made', 'best', 'joking',
+      'cheered', 'feeling good', 'good mood', 'bright day'
     ],
+
     curious: [
-      'why', 'how', 'what', 'who', 'explain', 'wonder', 'know', 'tell',
-      'happens', 'could', 'curious', 'learn', 'true', 'just', 'teach'
+      'why', 'how', 'what', 'who', 'explain', 'wonder', 'question',
+      'tell me', 'learn', 'teach', 'happens', 'know', 'curious', 'could you',
+      'true that', 'meaning', 'where does', 'how come'
     ],
+
     bored: [
-      'bored', 'nothing', 'ugh', 'again', 'boring', 'loop', 'same',
-      'don’t', 'waiting', 'stuck', 'slow', 'dull', 'not', 'fun',
-      'tired', 'why', 'here', 'no', 'ideas'
+      'bored', 'boring', 'again', 'loop', 'same', 'stuck', 'nothing',
+      'waiting', 'dull', 'tired', 'no ideas', 'dragging', 'ugh', 'repeating',
+      'slow', 'day is slow', 'waste'
     ],
+
     creature: [
-      'monster', 'glitch', 'creature', 'weird', 'strange', 'beast',
-      'imagine', 'describe', 'my', 'draw', 'powers', 'name', 'build',
-      'freaky', 'fog', 'shape', 'wings', 'teeth', 'invent', 'friend'
+      'monster', 'glitch', 'creature', 'beast', 'animal', 'describe',
+      'draw', 'powers', 'tentacles', 'wings', 'weird thing', 'strange',
+      'made up', 'build', 'invent', 'fangs', 'eyes', 'name it'
     ],
+
     school: [
-      'school', 'teacher', 'lesson', 'homework', 'test', 'maths',
-      'subject', 'reading', 'classroom', 'focus', 'hate', 'learn',
-      'get', 'told', 'revision', 'explain', 'boring', 'spelling', 'assembly'
+      'school', 'teacher', 'lesson', 'homework', 'test', 'subject',
+      'reading', 'class', 'boring', 'revision', 'focus', 'don’t get',
+      'got told off', 'maths', 'spelling', 'assembly', 'learning'
     ],
+
     dream: [
-      'dream', 'dreamed', 'nightmare', 'sleep', 'thoughts', 'saw',
-      'woke', 'fog', 'real', 'vision', 'scared', 'asleep', 'night',
-      'strange', 'felt', 'weird'
+      'dream', 'dreamed', 'nightmare', 'asleep', 'sleep', 'drifted',
+      'vision', 'saw', 'weird dream', 'memory', 'felt real', 'fog dream',
+      'woke up', 'strange', 'dreamt'
     ],
+
     videoGames: [
-      'video', 'minecraft', 'fortnite', 'roblox', 'game', 'level',
-      'boss', 'checkpoint', 'character', 'open', 'inventory', 'respawned',
-      'pixel', 'arcade', 'controller', 'built', 'world', 'base', 'survival', 'creative'
+      'game', 'minecraft', 'fortnite', 'roblox', 'checkpoint', 'level',
+      'boss', 'respawn', 'inventory', 'creative', 'survival', 'built',
+      'controller', 'pixel', 'arcade', 'character', 'base', 'open world'
     ],
+
     funny: [
-      'joke', 'funny', 'lol', 'laughed', 'haha', 'laugh', 'goofy',
-      'silly', 'random', 'joking', 'hilarious', 'funniest', 'giggled',
-      'weird', 'say', 'silly'
+      'joke', 'funny', 'lol', 'laugh', 'haha', 'giggle', 'silly',
+      'goofy', 'hilarious', 'random', 'tell me a joke', 'made me laugh',
+      'laughing', 'weird joke', 'say something silly'
     ],
+
     senses: [
-      'loud', 'bright', 'itchy', 'hurts', 'sound', 'squishy',
-      'buzzing', 'tingly', 'light', 'jumper', 'ears', 'noise',
-      'jump', 'uncomfortable', 'scratchy', 'fast', 'smells',
-      'still', 'focus'
+      'loud', 'bright', 'itchy', 'hurts', 'noise', 'buzzing',
+      'tingly', 'scratchy', 'uncomfortable', 'smells', 'can’t sit',
+      'too fast', 'too bright', 'too noisy', 'overload', 'focus'
     ],
+
     reassurance: [
-      'help', 'worried', 'anxious', 'panic', 'calm', 'reassure',
-      'scared', 'afraid', 'nervous', 'overwhelmed', 'safe', 'talk',
-      'listen', 'trust', 'guide', 'comfort', 'do', 'confused',
-      'lost', 'alone', 'understands'
+      'help', 'worried', 'anxious', 'panic', 'calm', 'reassure', 'scared',
+      'afraid', 'nervous', 'safe', 'lost', 'confused', 'alone',
+      'overwhelmed', 'talk', 'listen', 'trust', 'comfort', 'not okay'
     ]
   }
 };
-
