@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 
 const client = new Client({
   intents: [
@@ -16,8 +16,8 @@ const WRAITH_CREW_ROLE_ID = '1384826923653267568';
 const CAPTAIN_ROLE_ID = '1384826362186960999';
 const WELCOME_CHANNEL_ID = '1339149195688280085';
 const CLEANUP_CHANNEL_ID = '1384803714753232957';
+const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
 const LORE_COOLDOWN_MINUTES = 60;
-
 const loreCooldown = new Map();
 const userActivity = new Map();
 
@@ -91,29 +91,6 @@ client.on('messageCreate', async (message) => {
 
   userActivity.set(message.author.id, Date.now());
 
-  // Respond if the bot is directly mentioned
-  if (message.mentions.has(client.user)) {
-    const displayName = message.member?.displayName || message.author.username;
-    const mentionResponses = [
-      `*Wraith presence acknowledged, ${displayName}. Observation protocols remain active.*`,
-      `*Signal confirmed. Welcome back to the fog, ${displayName}.*`,
-      `*Buffer stabilised. ${displayName}, your ping is logged.*`,
-      `*Drift adjusted. ${displayName}, do not trust the quiet.*`,
-      `*Echo located. ${displayName}, your voice is not lost here.*`,
-      `*A watcher watches the Wraith? Bold move, ${displayName}.*`,
-      `*Anchor set. ${displayName}, you have the Wraith’s attention.*`,
-      `*Ping received. ${displayName}, your signal cuts through the fog.*`,
-      `*No accident you reached me, ${displayName}. The story pulls.*`,
-      `*Observation lens realigned. ${displayName}, speak freely.*`,
-      `*Even silence can be loud, but your ping? Clear as the glitch before thunder.*`,
-      `*The Perch rustled when you arrived, ${displayName}. You’ve stirred something.*`
-    ];
-
-    const reply = mentionResponses[Math.floor(Math.random() * mentionResponses.length)];
-    setTimeout(() => message.reply(reply), 1500);
-    return;
-  }
-
   const content = message.content.toLowerCase();
   let matchedCategory = null;
 
@@ -134,7 +111,7 @@ client.on('messageCreate', async (message) => {
 
     if (now - lastTime > cooldownMs) {
       const reply = responses.loreExclusive[Math.floor(Math.random() * responses.loreExclusive.length)];
-      setTimeout(() => message.channel.send(`*${reply}*`), 1500);
+      message.channel.send(`*${reply}*`);
       loreCooldown.set(message.author.id, now);
       return;
     }
@@ -143,7 +120,7 @@ client.on('messageCreate', async (message) => {
   if (Math.random() <= 0.6) {
     const categoryResponses = responses[matchedCategory];
     const reply = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
-    setTimeout(() => message.channel.send(`*${reply}*`), 1500);
+    message.channel.send(`*${reply}*`);
   }
 });
 
@@ -159,8 +136,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     try {
       await user.roles.add(SIGNAL_WATCHER_ROLE_ID);
       const generalChannel = await client.channels.fetch(WELCOME_CHANNEL_ID);
+      const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
       if (generalChannel && generalChannel.isTextBased()) {
-        generalChannel.send(`*[WRAITH OBSERVER]: ${user.displayName || user.user.username} has entered the stream layer. Signal Watcher role assigned.*`);
+        generalChannel.send(`*[WRAITH OBSERVER]: ${user.user.username} has entered the stream layer. Signal Watcher role assigned.*`);
+      }
+      if (logChannel && logChannel.isTextBased()) {
+        logChannel.send(`[WRAITH SYSTEM]: Signal Watcher role granted to @${user.user.username}.`);
       }
     } catch (err) {
       console.error('Error assigning role:', err);
@@ -172,16 +153,19 @@ client.on('guildMemberAdd', async (member) => {
   try {
     await member.roles.add(WRAITH_CREW_ROLE_ID);
     const generalChannel = await client.channels.fetch(WELCOME_CHANNEL_ID);
+    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
     if (generalChannel && generalChannel.isTextBased()) {
       const welcomeMsg = responses.welcome[Math.floor(Math.random() * responses.welcome.length)];
       generalChannel.send(`*[WRAITH OBSERVER]: ${welcomeMsg}*`);
+    }
+    if (logChannel && logChannel.isTextBased()) {
+      logChannel.send(`[WRAITH SYSTEM]: Onboarding complete — ${member.user.username} assigned Wraith Crew role.`);
     }
   } catch (err) {
     console.error('Failed to send onboarding message or assign Wraith Crew role:', err);
   }
 });
 
-// Role reversion check (every 6 hours)
 setInterval(async () => {
   const now = Date.now();
   const fourteenDays = 14 * 24 * 60 * 60 * 1000;
@@ -192,6 +176,8 @@ setInterval(async () => {
   const role = guild.roles.cache.get(SIGNAL_WATCHER_ROLE_ID);
   if (!role) return;
 
+  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+
   const members = role.members;
   for (const [id, member] of members) {
     if (member.roles.cache.has(CAPTAIN_ROLE_ID)) continue;
@@ -201,35 +187,38 @@ setInterval(async () => {
       try {
         await member.roles.remove(SIGNAL_WATCHER_ROLE_ID);
         await member.roles.add(WRAITH_CREW_ROLE_ID);
-        console.log(`[WRAITH] ${member.displayName || member.user.username} reverted to Wraith Crew due to inactivity.`);
+        console.log(`[WRAITH] ${member.user.username} reverted to Wraith Crew due to inactivity.`);
+        if (logChannel && logChannel.isTextBased()) {
+          logChannel.send(`[WRAITH SYSTEM]: @${member.user.username} auto-reverted to Wraith Crew (inactive 14+ days).`);
+        }
       } catch (err) {
-        console.error(`Failed to revert role for ${member.displayName || member.user.username}:`, err);
+        console.error(`Failed to revert role for ${member.user.username}:`, err);
       }
     }
   }
-}, 6 * 60 * 60 * 1000);
+}, 6 * 60 * 60 * 1000); // Every 6 hours
 
-// Message cleanup (every 24 hours)
 setInterval(async () => {
-  try {
-    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
-    if (!cleanupChannel || !cleanupChannel.isTextBased()) return;
+  const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
 
-    const now = Date.now();
-    const messages = await cleanupChannel.messages.fetch({ limit: 100 });
-    messages.forEach(msg => {
-      if (now - msg.createdTimestamp > 24 * 60 * 60 * 1000) {
-        msg.delete().catch(console.error);
+  if (cleanupChannel && cleanupChannel.isTextBased()) {
+    try {
+      const messages = await cleanupChannel.messages.fetch({ limit: 100 });
+      const now = Date.now();
+      const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
+
+      if (oldMessages.size > 0) {
+        await cleanupChannel.bulkDelete(oldMessages, true);
+        cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
+        if (logChannel && logChannel.isTextBased()) {
+          logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
+        }
       }
-    });
-  } catch (err) {
-    console.error('Error during cleanup operation:', err);
+    } catch (err) {
+      console.error('[WRAITH CLEANUP ERROR]', err);
+    }
   }
-}, 24 * 60 * 60 * 1000);
-
-// Keep-alive heartbeat to prevent Railway shutdown
-setInterval(() => {
-  console.log(`[WRAITH] Heartbeat – still alive at ${new Date().toISOString()}`);
-}, 1000 * 60 * 5);
+}, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
