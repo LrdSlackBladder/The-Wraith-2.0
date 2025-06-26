@@ -289,5 +289,18 @@ module.exports = {
       'Safe signal detected. You’re home in this moment.',
       'You are enough — even if today said otherwise.'
     ]
-  }
+  },
+
+  private: [
+    'Hmm? I’m here. Just watching the stream ripple.',
+    'Nothing wrong with a quiet signal.',
+    'You pinged the fog — and it blinked.',
+    'You don’t always need a reason to speak. I’m listening.',
+    'Static acknowledged. What now?',
+    'Say more. Or don’t. I’ll be here.',
+    'Sometimes even “hello” echoes far in here.',
+    'Stillness observed. Presence logged.',
+    'That message landed — and the Wraith noticed.',
+    'Noted. The silence shifts.'
+  ]
 };
