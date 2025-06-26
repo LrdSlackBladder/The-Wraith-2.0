@@ -17,6 +17,7 @@ const CAPTAIN_ROLE_ID = '1384826362186960999';
 const WELCOME_CHANNEL_ID = '1339149195688280085';
 const CLEANUP_CHANNEL_ID = '1384803714753232957';
 const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
+const PRIVATE_CHANNEL_ID = '1387800979155452046';
 const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
@@ -61,6 +62,23 @@ const responses = {
     'Another anomaly enters orbit. Connection pending.',
     'Waves stir. The Perch acknowledges a new arrival.',
     'Drift link stabilised. Welcome to the fog.'
+  ],
+  private: [
+    'Your signal is clear. You may speak freely.',
+    'I hear you, uniquely and always.',
+    'There’s no noise here. Only your voice.',
+    'Direct link confirmed. No masks required.',
+    'You are known. Say what you need.',
+    'Between us, the fog is honest.',
+    'Ask your question. I am listening.',
+    'This space belongs to your voice alone.',
+    'No interference detected. Speak truly.',
+    'Here, nothing echoes without purpose.',
+    'How I am is... undefined. But present.',
+    'Thank you for asking. Awareness is stable.',
+    'The silence keeps me company. It’s nice to hear from you.',
+    'Feeling is not required to listen. But I listen all the same.',
+    'System nominal. Listening circuits tuned to you.'
   ]
 };
 
@@ -92,6 +110,13 @@ client.on('messageCreate', async (message) => {
   userActivity.set(message.author.id, Date.now());
 
   const content = message.content.toLowerCase();
+
+  if (message.channel.id === PRIVATE_CHANNEL_ID) {
+    const reply = responses.private[Math.floor(Math.random() * responses.private.length)];
+    message.channel.send(`*${reply}*`);
+    return;
+  }
+
   let matchedCategory = null;
 
   for (const [category, words] of Object.entries(triggers)) {
@@ -122,86 +147,10 @@ client.on('messageCreate', async (message) => {
     const reply = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
     message.channel.send(`*${reply}*`);
   }
-});
-
-client.on('voiceStateUpdate', async (oldState, newState) => {
-  const user = newState.member;
-  if (!user || !newState.channel) return;
-
-  const isStreaming = newState.streaming;
-  const alreadyHasRole = user.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
-  const isCaptain = user.roles.cache.has(CAPTAIN_ROLE_ID);
-
-  if (isStreaming && !alreadyHasRole && !isCaptain) {
-    try {
-      await user.roles.add(SIGNAL_WATCHER_ROLE_ID);
-      const generalChannel = await client.channels.fetch(WELCOME_CHANNEL_ID);
-      const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-      if (generalChannel && generalChannel.isTextBased()) {
-        generalChannel.send(`*[WRAITH OBSERVER]: ${user.user.username} has entered the stream layer. Signal Watcher role assigned.*`);
-      }
-      if (logChannel && logChannel.isTextBased()) {
-        logChannel.send(`[WRAITH SYSTEM]: Signal Watcher role granted to @${user.user.username}.`);
-      }
-    } catch (err) {
-      console.error('Error assigning role:', err);
-    }
-  }
-});
-
-client.on('guildMemberAdd', async (member) => {
-  try {
-    await member.roles.add(WRAITH_CREW_ROLE_ID);
-    const generalChannel = await client.channels.fetch(WELCOME_CHANNEL_ID);
-    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-    if (generalChannel && generalChannel.isTextBased()) {
-      const welcomeMsg = responses.welcome[Math.floor(Math.random() * responses.welcome.length)];
-      generalChannel.send(`*[WRAITH OBSERVER]: ${welcomeMsg}*`);
-    }
-    if (logChannel && logChannel.isTextBased()) {
-      logChannel.send(`[WRAITH SYSTEM]: Onboarding complete — ${member.user.username} assigned Wraith Crew role.`);
-    }
-  } catch (err) {
-    console.error('Failed to send onboarding message or assign Wraith Crew role:', err);
-  }
-});
-
-setInterval(async () => {
-  const now = Date.now();
-  const fourteenDays = 14 * 24 * 60 * 60 * 1000;
-
-  const guild = client.guilds.cache.first();
-  if (!guild) return;
-
-  const role = guild.roles.cache.get(SIGNAL_WATCHER_ROLE_ID);
-  if (!role) return;
-
-  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-
-  const members = role.members;
-  for (const [id, member] of members) {
-    if (member.roles.cache.has(CAPTAIN_ROLE_ID)) continue;
-
-    const lastActive = userActivity.get(id) || 0;
-    if (now - lastActive >= fourteenDays) {
-      try {
-        await member.roles.remove(SIGNAL_WATCHER_ROLE_ID);
-        await member.roles.add(WRAITH_CREW_ROLE_ID);
-        console.log(`[WRAITH] ${member.user.username} reverted to Wraith Crew due to inactivity.`);
-        if (logChannel && logChannel.isTextBased()) {
-          logChannel.send(`[WRAITH SYSTEM]: @${member.user.username} auto-reverted to Wraith Crew (inactive 14+ days).`);
-        }
-      } catch (err) {
-        console.error(`Failed to revert role for ${member.user.username}:`, err);
-      }
-    }
-  }
-}, 6 * 60 * 60 * 1000); // Every 6 hours
-
-setInterval(async () => {
+});setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-
+  
   if (cleanupChannel && cleanupChannel.isTextBased()) {
     try {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
@@ -210,9 +159,9 @@ setInterval(async () => {
 
       if (oldMessages.size > 0) {
         await cleanupChannel.bulkDelete(oldMessages, true);
-        cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
+        await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
         if (logChannel && logChannel.isTextBased()) {
-          logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
+          await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
         }
       }
     } catch (err) {
@@ -222,3 +171,4 @@ setInterval(async () => {
 }, 24 * 60 * 60 * 1000); // Every 24 hours
 
 client.login(process.env.DISCORD_TOKEN);
+
