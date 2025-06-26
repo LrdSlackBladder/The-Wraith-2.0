@@ -48,11 +48,17 @@ client.on('messageCreate', async (message) => {
     return message.channel.send(`*${reply}*`);
   }
 
-  // Private channel only
+  // Private channel logic
   if (isPrivate) {
-    // 🎞️ GIF detection
-    const hasGif = [...message.attachments.values()].some(file => file.contentType?.includes('gif')) ||
-                   message.content.includes('.gif');
+    const contentWords = content.split(/\s+/);
+
+    // 🎞️ GIF detection (robust for Tenor, Discord, Giphy)
+    const hasGif =
+      [...message.attachments.values()].some(file =>
+        file.contentType?.toLowerCase().includes('gif') ||
+        file.url.toLowerCase().endsWith('.gif')
+      ) ||
+      /(tenor\.com\/view\/.+-gif-\d+)|(giphy\.com\/gifs\/)|(media\.discordapp\.net\/attachments\/.+\.gif)/i.test(content);
 
     if (hasGif) {
       const gifReply = responses.privateThemes.gifDetected[Math.floor(Math.random() * responses.privateThemes.gifDetected.length)];
@@ -61,37 +67,54 @@ client.on('messageCreate', async (message) => {
       return message.channel.send(`*${gifReply}*`);
     }
 
-    // 🧠 Reactionary response match (top-level, not in privateThemes)
+    // 🧠 Reactionary response (best match logic)
+    let bestReactionary = null;
+    let reactionaryScore = 0;
+
     if (Array.isArray(responses.reactionary)) {
       for (const r of responses.reactionary) {
-        if (r.triggers.some(t => content.includes(t))) {
-          await message.channel.sendTyping();
-          await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 1500));
-          return message.channel.send(`*${r.text}*`);
+        let score = 0;
+        for (const trigger of r.triggers) {
+          const regex = new RegExp(`\\b${trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          if (regex.test(content)) score++;
         }
+        if (score > reactionaryScore) {
+          reactionaryScore = score;
+          bestReactionary = r;
+        }
+      }
+
+      if (bestReactionary && reactionaryScore > 0) {
+        await message.channel.sendTyping();
+        await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 1500));
+        return message.channel.send(`*${bestReactionary.text}*`);
       }
     }
 
-    // 🔒 Private trigger category match
-    let bestMatch = null;
-    let bestScore = 0;
+    // 🔒 Private theme category match (e.g., sad, bored)
+    let bestTheme = null;
+    let bestThemeScore = 0;
 
     for (const [category, words] of Object.entries(triggers.privateTriggers)) {
       let score = words.filter(trigger => content.includes(trigger)).length;
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = category;
+      if (score > bestThemeScore) {
+        bestThemeScore = score;
+        bestTheme = category;
       }
     }
 
-    if (bestMatch && responses.privateThemes[bestMatch]) {
-      const reply = responses.privateThemes[bestMatch][Math.floor(Math.random() * responses.privateThemes[bestMatch].length)];
+    if (bestTheme && responses.privateThemes[bestTheme]) {
+      const reply = responses.privateThemes[bestTheme][Math.floor(Math.random() * responses.privateThemes[bestTheme].length)];
+      await message.channel.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
       return message.channel.send(`*${reply}*`);
     }
 
-    // Fallback to neutral private reply
+    // 🛑 Fallback: neutral reply if no theme or reaction matched
     if (Array.isArray(responses.private)) {
       const reply = responses.private[Math.floor(Math.random() * responses.private.length)];
+      await message.channel.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
       return message.channel.send(`*${reply}*`);
     }
 
@@ -125,7 +148,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 📡 General reply
+  // 📡 General public reply (60% chance)
   if (Math.random() <= 0.6) {
     const replyOptions = responses[matchedCategory];
     if (Array.isArray(replyOptions)) {
@@ -135,7 +158,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// 🧹 Cleanup Task
+// 🧹 Daily cleanup of messages older than 24h
 setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
@@ -158,9 +181,9 @@ setInterval(async () => {
       console.error('[WRAITH CLEANUP ERROR]', err);
     }
   }
-}, 24 * 60 * 60 * 1000);
+}, 24 * 60 * 60 * 1000); // Every 24h
 
-// Crash safety
+// 🛡️ Crash protection
 process.on('uncaughtException', err => console.error('Uncaught exception:', err));
 process.on('unhandledRejection', err => console.error('Unhandled rejection:', err));
 
