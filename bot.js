@@ -202,4 +202,9 @@ setInterval(async () => {
   }
 }, 24 * 60 * 60 * 1000); // Every 24 hours
 
+// Keep-alive heartbeat to prevent Railway shutdown
+setInterval(() => {
+  console.log(`[WRAITH] Heartbeat – still alive at ${new Date().toISOString()}`);
+}, 1000 * 60 * 5); // every 5 minutes
+
 client.login(process.env.DISCORD_TOKEN);
