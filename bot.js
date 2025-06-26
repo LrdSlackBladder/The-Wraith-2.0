@@ -138,7 +138,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  if (Math.random() <= 0.6) {
+  if (Math.random() <= 0.4) {
     const categoryResponses = responses[matchedCategory];
     const reply = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
     setTimeout(() => message.channel.send(`*${reply}*`), 1500);
