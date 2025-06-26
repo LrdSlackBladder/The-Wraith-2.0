@@ -60,11 +60,11 @@ client.on('messageCreate', async (message) => {
     }
 
     // 🧠 Reactionary response match
-    for (const r of responses.reactionary) {
-      if (r.triggers.some(t => content.includes(t))) {
-        return message.channel.send(`*${r.text}*`);
-      }
-    }
+   for (const r of responses.privateThemes.reactionary) {
+  if (r.triggers.some(t => content.includes(t))) {
+    return message.channel.send(`*${r.text}*`);
+  }
+}
 
     // 🔒 Private trigger category match
     let bestMatch = null;
