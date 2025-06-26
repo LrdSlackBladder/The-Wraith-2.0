@@ -36,7 +36,7 @@ module.exports = {
     'dreamed', 'woke', 'mind', 'sleeping', 'memory', 'saw', 'vision', 'felt'
   ],
 
-  // 🔒 Private channel triggers (for your son)
+  // 🔒 Private channel triggers (including public triggers)
   privateTriggers: {
     sad: [
       'sad', 'angry', 'upset', 'cry', 'mean', 'frustrated', 'hate',
@@ -102,6 +102,36 @@ module.exports = {
       'help', 'worried', 'anxious', 'panic', 'calm', 'reassure', 'scared',
       'afraid', 'nervous', 'safe', 'lost', 'confused', 'alone',
       'overwhelmed', 'talk', 'listen', 'trust', 'comfort', 'not okay'
+    ],
+
+    // ✅ Public triggers added to private context
+    ambient: [
+      'hello', 'hi', 'hey', 'anyone', 'there', 'testing', 'echo',
+      'still', 'quiet', 'alone', 'speak', 'respond', 'talk', 'message',
+      'who', 'this', 'where', 'presence', 'signal'
+    ],
+
+    unsettling: [
+      'heard', 'something', 'noise', 'moved', 'glitch', 'glitched',
+      'strange', 'weird', 'wrong', 'off', 'echo', 'trace', 'disturbance',
+      'unusual', 'flicker', 'creepy', 'disruption'
+    ],
+
+    lore: [
+      'wraith', 'observer', 'perch', 'fog', 'port', 'anchor', 'drift',
+      'legacy', 'glitch', 'buffer', 'stream', 'layer', 'signal', 'echoes'
+    ],
+
+    existential: [
+      'real', 'watched', 'happening', 'right', 'dreaming', 'alone',
+      'exist', 'reality', 'wrong', 'perception', 'why', 'what', 'meaning',
+      'matter', 'question', 'lost', 'forgotten'
+    ],
+
+    glitch: [
+      'error', 'bug', 'broken', 'corrupt', 'scrambled', 'pattern', 'glitch',
+      'weird', 'issue', 'malfunction', 'fault', 'misplaced', 'crash', 'code',
+      'debug', 'problem'
     ]
   }
 };
