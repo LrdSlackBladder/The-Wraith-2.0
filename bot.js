@@ -27,126 +27,134 @@ const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const userActivity = new Map();
 
-// Utility: delay helper
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Keep-alive server to prevent idle shutdowns
+// Keep-alive for Railway/GitHub deployment
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('The Wraith is watching...\n');
 }).listen(process.env.PORT || 3000);
 
-// On ready
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
 
-// Main message handler
 client.on('messageCreate', async (message) => {
-  try {
-    if (message.author.bot) return;
-    const content = message.content.toLowerCase();
-    userActivity.set(message.author.id, Date.now());
-    console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
+  if (message.author.bot) return;
+  userActivity.set(message.author.id, Date.now());
+  const content = message.content.toLowerCase();
+  console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
-    // ➤ Public ping handling
-    if (message.mentions.has(client.user) && message.channel.id !== PRIVATE_CHANNEL_ID) {
-      await wait(1500);
-      const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
-      return message.channel.send(`*${reply}*`);
+  // 🧲 Respond to @mention pings
+  if (
+    (message.content.includes(`<@${client.user.id}>`) ||
+     message.content.includes(`<@!${client.user.id}>`) ||
+     message.mentions.has(client.user)) &&
+    message.channel.id !== PRIVATE_CHANNEL_ID
+  ) {
+    console.log(`[DEBUG] ${message.author.username} pinged The Wraith.`);
+    await wait(1500);
+    const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
+    return message.channel.send(`*${reply}*`);
+  }
+
+  // 🔒 PRIVATE CHANNEL
+  if (message.channel.id === PRIVATE_CHANNEL_ID) {
+    const theme = Object.entries(triggers.privateTriggers).find(([key, triggerWords]) =>
+      Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger.toLowerCase()))
+    );
+
+    let reply;
+    if (theme) {
+      const [category] = theme;
+      const themedReplies = responses.privateThemes?.[category];
+      if (Array.isArray(themedReplies) && themedReplies.length > 0) {
+        reply = themedReplies[Math.floor(Math.random() * themedReplies.length)];
+      }
     }
 
-    // ➤ Private channel logic
-    if (message.channel.id === PRIVATE_CHANNEL_ID) {
-      const theme = Object.entries(triggers.privateTriggers).find(
-        ([, triggerWords]) => Array.isArray(triggerWords) && triggerWords.some(t => content.includes(t))
-      );
-      let reply;
-      if (theme) {
-        const [category] = theme;
-        const arr = responses.privateThemes?.[category];
-        if (Array.isArray(arr) && arr.length) {
-          reply = arr[Math.floor(Math.random() * arr.length)];
-        }
-      }
-      if (!reply && Array.isArray(responses.private)) {
-        reply = responses.private[Math.floor(Math.random() * responses.private.length)];
-      }
-      if (reply) {
-        await wait(2500);
-        return message.channel.send(`*${reply}*`);
-      }
+    if (!reply && Array.isArray(responses.private)) {
+      reply = responses.private[Math.floor(Math.random() * responses.private.length)];
+    }
+
+    if (reply) {
+      await wait(2500);
+      message.channel.send(`*${reply}*`);
+    }
+    return;
+  }
+
+  // 🌐 PUBLIC CHANNEL
+  let matchedCategory = null;
+  for (const [category, triggerWords] of Object.entries(triggers)) {
+    if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger.toLowerCase()))) {
+      matchedCategory = category;
+      break;
+    }
+  }
+
+  if (!matchedCategory) return;
+
+  // 🧠 Lore Exclusive (Signal Watchers only)
+  const isSignalWatcher = message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
+  if (matchedCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
+    const lastTime = loreCooldown.get(message.author.id) || 0;
+    const now = Date.now();
+    const cooldownMs = LORE_COOLDOWN_MINUTES * 60 * 1000;
+
+    if (now - lastTime > cooldownMs) {
+      const exclusiveReply = responses.loreExclusive[Math.floor(Math.random() * responses.loreExclusive.length)];
+      await wait(2500);
+      message.channel.send(`*${exclusiveReply}*`);
+      loreCooldown.set(message.author.id, now);
       return;
     }
+  }
 
-    // ➤ Public trigger matching
-    let matchedCategory = null;
-    for (const [category, words] of Object.entries(triggers)) {
-      if (Array.isArray(words) && words.some(w => content.includes(w))) {
-        matchedCategory = category;
-        break;
-      }
+  // 📡 General public response
+  if (Math.random() <= 0.6) {
+    const replyOptions = responses[matchedCategory];
+    if (Array.isArray(replyOptions)) {
+      const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
+      await wait(2000 + Math.random() * 1500);
+      message.channel.send(`*${reply}*`);
     }
-    if (!matchedCategory) return;
-
-    // ➤ Lore cooldown for Signal Watchers
-    if (
-      matchedCategory === 'lore' &&
-      message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID) &&
-      Math.random() <= 0.2
-    ) {
-      const lastTime = loreCooldown.get(message.author.id) || 0;
-      const now = Date.now();
-      if (now - lastTime > LORE_COOLDOWN_MINUTES * 60 * 1000) {
-        const excl = responses.loreExclusive[Math.floor(Math.random() * responses.loreExclusive.length)];
-        await wait(2500);
-        message.channel.send(`*${excl}*`);
-        loreCooldown.set(message.author.id, now);
-        return;
-      }
-    }
-
-    // ➤ General public response
-    if (Math.random() <= 0.6) {
-      const arr = responses[matchedCategory];
-      if (Array.isArray(arr)) {
-        const reply = arr[Math.floor(Math.random() * arr.length)];
-        await wait(2000 + Math.random() * 1500);
-        message.channel.send(`*${reply}*`);
-      }
-    }
-  } catch (err) {
-    console.error('[ERROR] messageCreate handler failed:', err);
   }
 });
 
-// Cleanup task
+// 🧹 Daily Cleanup Task
 setInterval(async () => {
-  try {
-    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
-    const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-    if (cleanupChannel?.isTextBased()) {
+  const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+  const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+
+  if (cleanupChannel && cleanupChannel.isTextBased()) {
+    try {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
       const now = Date.now();
-      const oldMessages = messages.filter(m => now - m.createdTimestamp > 24 * 60 * 60 * 1000);
-      if (oldMessages.size) {
+      const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
+
+      if (oldMessages.size > 0) {
         await cleanupChannel.bulkDelete(oldMessages, true);
         await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
-        if (logChannel?.isTextBased()) {
-          await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed — ${oldMessages.size} items removed.`);
+
+        if (logChannel && logChannel.isTextBased()) {
+          await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed in Trains channel — ${oldMessages.size} items removed.`);
         }
       }
+    } catch (err) {
+      console.error('[WRAITH CLEANUP ERROR]', err);
     }
-  } catch (err) {
-    console.error('[ERROR] Cleanup task failed:', err);
   }
 }, 24 * 60 * 60 * 1000);
 
-// Global crash handlers
-process.on('uncaughtException', err => console.error('[CRASH] uncaughtException:', err));
-process.on('unhandledRejection', err => console.error('[CRASH] unhandledRejection:', err));
+// 🔥 Crash diagnostics
+process.on('uncaughtException', err => {
+  console.error('Uncaught exception:', err);
+});
+process.on('unhandledRejection', err => {
+  console.error('Unhandled rejection:', err);
+});
 
-// Start bot
 client.login(process.env.DISCORD_TOKEN);
