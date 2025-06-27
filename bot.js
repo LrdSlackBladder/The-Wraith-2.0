@@ -15,13 +15,16 @@ const client = new Client({
 });
 
 // Channel & role IDs
-const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
-const CLEANUP_CHANNEL_ID = '1384803714753232957';
-const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
-const PRIVATE_CHANNEL_ID = '1387800979155452046';
+const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452'; // Replace with actual role ID
+const CLEANUP_CHANNEL_ID = '1384803714753232957'; // Replace with actual channel ID for cleanup
+const ADMIN_LOG_CHANNEL_ID = '1387795257407569941'; // Replace with your log channel ID
+const PRIVATE_CHANNEL_ID = '1387800979155452046'; // Replace with private channel ID
 
 const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
+
+// Flag to pause bot responses
+let wraithPaused = false;
 
 // Keep-alive ping
 http.createServer((req, res) => {
@@ -34,13 +37,70 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
+  // Prevent bot from responding to itself
   if (message.author.bot) return;
 
   const content = message.content.toLowerCase();
+
+  // Command to pause the bot (only for specific user or admin)
+  if (content === '!wraithpause' && message.author.id === 1176147684634144870) {
+    wraithPaused = true;
+    return message.channel.send("Wraith has been paused.");
+  }
+
+  // Command to resume the bot (only for specific user or admin)
+  if (content === '!wraithresume' && message.author.id === 1176147684634144870) {
+    wraithPaused = false;
+    return message.channel.send("Wraith has resumed.");
+  }
+
+  // Command to respond with "Pong!" when a user types !ping
+  if (content === '!ping') {
+    return message.channel.send('Pong!');
+  }
+
+  // Command to list available commands when a user types !help
+  if (content === '!help') {
+    const helpMessage = `
+      **Available Commands:**
+      - !ping: Responds with "Pong!"
+      - !help: Lists all available commands
+      - !wraithpause: Pauses the bot's responses (admin only)
+      - !wraithresume: Resumes the bot's responses (admin only)
+      - !forcecleanup: Forces cleanup of old messages (admin only)
+    `;
+    return message.channel.send(helpMessage);
+  }
+
+  // Command to force cleanup of messages older than 24h
+  if (content === '!forcecleanup' && message.author.id === 1176147684634144870) {
+    // Trigger cleanup logic
+    const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
+    if (cleanupChannel && cleanupChannel.isTextBased()) {
+      try {
+        const messages = await cleanupChannel.messages.fetch({ limit: 100 });
+        const now = Date.now();
+        const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
+
+        if (oldMessages.size > 0) {
+          await cleanupChannel.bulkDelete(oldMessages, true);
+          await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
+        }
+      } catch (err) {
+        console.error('[FORCE CLEANUP ERROR]', err);
+        message.channel.send('An error occurred while performing cleanup.');
+      }
+    } else {
+      message.channel.send('Cleanup channel not found!');
+    }
+    return;
+  }
+
+  // Skip further processing if the bot is paused
+  if (wraithPaused) return;
+
   const isPrivate = message.channel.id === PRIVATE_CHANNEL_ID;
   const isMention = message.mentions.has(client.user);
-
-  console.log(`[DEBUG] Message in ${message.channel.id} from ${message.author.username}: ${message.content}`);
 
   // Respond to @ping in public channels
   if (isMention && !isPrivate) {
@@ -61,10 +121,10 @@ client.on('messageCreate', async (message) => {
       /(tenor\.com\/view\/.+-gif-\d+)|(giphy\.com\/gifs\/)|(media\.discordapp\.net\/attachments\/.+\.gif)/i.test(content);
 
     if (hasGif && Array.isArray(responses.gifDetected) && responses.gifDetected.length > 0) {
-  const gifReply = responses.gifDetected[Math.floor(Math.random() * responses.gifDetected.length)];
-  await message.channel.sendTyping();
-  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
-  return message.channel.send(`*${gifReply}*`);
+      const gifReply = responses.gifDetected[Math.floor(Math.random() * responses.gifDetected.length)];
+      await message.channel.sendTyping();
+      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
+      return message.channel.send(`*${gifReply}*`);
     }
 
     // 🧠 Reactionary response (best match logic)
