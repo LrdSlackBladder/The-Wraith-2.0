@@ -14,7 +14,7 @@ const client = new Client({
   ]
 });
 
-// Channel & role IDs
+// Channel & role IDs (replace these with actual channel IDs)
 const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452'; // Replace with actual role ID
 const CLEANUP_CHANNEL_ID = '1384803714753232957'; // Replace with actual channel ID for cleanup
 const ADMIN_LOG_CHANNEL_ID = '1387795257407569941'; // Replace with your log channel ID
@@ -42,24 +42,44 @@ client.on('messageCreate', async (message) => {
 
   const content = message.content.toLowerCase();
 
+  // Log incoming message to see what the bot is receiving
+  console.log(`[DEBUG] Received message: ${content} from ${message.author.username} (${message.author.id})`);
+
   // Command to pause the bot (only for specific user or admin)
-  if (content === '!wraithpause' && message.author.id === 1176147684634144870) {
-    wraithPaused = true;
-    return message.channel.send("Wraith has been paused.");
+  if (content === '!wraithpause') {
+    console.log(`[DEBUG] Checking if user ID matches: ${message.author.id}`);
+    if (message.author.id === '1176147684634144870') {  // Replace with your actual User ID
+      console.log("Pause command received.");
+      wraithPaused = true;
+      return message.channel.send("Wraith has been paused.");
+    } else {
+      console.log("Pause command failed: User ID does not match.");
+    }
   }
 
   // Command to resume the bot (only for specific user or admin)
-  if (content === '!wraithresume' && message.author.id === 1176147684634144870) {
-    wraithPaused = false;
-    return message.channel.send("Wraith has resumed.");
+  if (content === '!wraithresume') {
+    console.log(`[DEBUG] Checking if user ID matches: ${message.author.id}`);
+    if (message.author.id === '1176147684634144870') {  // Replace with your actual User ID
+      console.log("Resume command received.");
+      wraithPaused = false;
+      return message.channel.send("Wraith has resumed.");
+    } else {
+      console.log("Resume command failed: User ID does not match.");
+    }
   }
 
-  // Command to respond with "Pong!" when a user types !ping
+  // If the bot is paused, do not process any further commands
+  if (wraithPaused) {
+    console.log("[DEBUG] Wraith is paused. Commands are being ignored.");
+    return;
+  }
+
+  // Handle other commands (e.g., !ping, !help, etc.)
   if (content === '!ping') {
     return message.channel.send('Pong!');
   }
 
-  // Command to list available commands when a user types !help
   if (content === '!help') {
     const helpMessage = `
       **Available Commands:**
@@ -73,7 +93,8 @@ client.on('messageCreate', async (message) => {
   }
 
   // Command to force cleanup of messages older than 24h
-  if (content === '!forcecleanup' && message.author.id === 1176147684634144870) {
+  if (content === '!forcecleanup' && message.author.id === '1176147684634144870') {
+    console.log("Force cleanup command received.");
     // Trigger cleanup logic
     const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
     if (cleanupChannel && cleanupChannel.isTextBased()) {
@@ -96,9 +117,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // Skip further processing if the bot is paused
-  if (wraithPaused) return;
-
+  // Your existing logic for other responses (reactionary, private themes, etc.)
   const isPrivate = message.channel.id === PRIVATE_CHANNEL_ID;
   const isMention = message.mentions.has(client.user);
 
@@ -108,7 +127,7 @@ client.on('messageCreate', async (message) => {
     return message.channel.send(`*${reply}*`);
   }
 
-  // Private channel logic
+  // Private channel logic (message processing)
   if (isPrivate) {
     const contentWords = content.split(/\s+/);
 
@@ -181,7 +200,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-  // 🌐 Public triggers
+  // 🌐 Public triggers logic (for other responses)
   let matchedCategory = null;
 
   for (const [category, triggerWords] of Object.entries(triggers)) {
