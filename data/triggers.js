@@ -1,175 +1,175 @@
 // triggers.js
 
 module.exports = {
-  // 🔊 Public-facing triggers
+  // 🌐 Public-facing trigger categories
   ambient: [
-    'hello', 'hi', 'hey', 'anyone', 'there', 'testing', 'echo',
-    'still', 'quiet', 'alone', 'speak', 'respond', 'talk', 'message',
-    'who', 'this', 'where', 'presence', 'signal', 'is anyone here',
-    'can you hear me', 'show yourself', 'say something'
+    'hello', 'hi', 'hey', 'anyone', 'there', 'testing', 'echo', 'still',
+    'quiet', 'alone', 'presence', 'signal', 'ping', 'connect', 'respond',
+    'message', 'listen', 'call', 'touch', 'hear', 'watch', 'visible',
+    'reaching', 'drift', 'voice'
   ],
 
   unsettling: [
-    'heard', 'something', 'noise', 'moved', 'glitch', 'glitched',
-    'strange', 'weird', 'wrong', 'off', 'echo', 'trace', 'disturbance',
-    'unusual', 'flicker', 'creepy', 'disruption', 'chilling', 'whisper',
-    'shiver', 'glitching', 'twitch', 'haunting'
+    'weird', 'strange', 'off', 'wrong', 'noise', 'moved', 'creepy',
+    'haunted', 'shiver', 'whisper', 'disturbance', 'dark', 'chill',
+    'static', 'twitch', 'flicker', 'unnatural', 'shadows', 'echo', 'shift',
+    'entity', 'sensed', 'unreal', 'invisible', 'lurking'
   ],
 
   lore: [
-    'wraith', 'observer', 'perch', 'fog', 'port', 'anchor', 'drift',
-    'legacy', 'glitch', 'buffer', 'stream', 'layer', 'signal', 'echoes',
-    'parrot', 'mask', 'storyline', 'last stream', 'bitling', 'debug zone'
+    'wraith', 'observer', 'perch', 'fog', 'anchor', 'port', 'stream',
+    'legacy', 'drift', 'glitch', 'signal', 'protocol', 'map', 'node',
+    'parrot', 'storyline', 'zone', 'echoes', 'watcher', 'loop', 'mask',
+    'truth', 'myth', 'fragment', 'memory', 'cycle'
   ],
 
   existential: [
-    'real', 'watched', 'happening', 'right', 'dreaming', 'alone',
-    'exist', 'reality', 'wrong', 'perception', 'why', 'what', 'meaning',
-    'matter', 'question', 'lost', 'forgotten', 'who am i', 'do i exist',
-    'am i real', 'is this real', 'am i dreaming'
+    'real', 'exist', 'dream', 'illusion', 'why', 'who', 'what', 'alone',
+    'meaning', 'nothing', 'truth', 'lost', 'forgotten', 'invisible',
+    'seen', 'purpose', 'existence', 'watching', 'fake', 'being',
+    'unreal', 'mind', 'identity', 'perception'
   ],
 
   glitch: [
-    'error', 'bug', 'broken', 'corrupt', 'scrambled', 'pattern', 'glitch',
-    'weird', 'issue', 'malfunction', 'fault', 'misplaced', 'crash', 'code',
-    'debug', 'problem', 'lag', 'loop', 'data loss', 'buffering', 'freeze'
+    'glitch', 'error', 'bug', 'broken', 'crash', 'freeze', 'scramble',
+    'lag', 'malfunction', 'fault', 'loop', 'corrupt', 'issue', 'debug',
+    'problem', 'misplaced', 'fragmented', 'compression', 'jammed',
+    'disconnect', 'delay', 'system', 'bit', 'spike', 'desync'
   ],
 
   dream: [
-    'dream', 'sleep', 'asleep', 'nightmare', 'visions', 'fog', 'drifted',
-    'dreamed', 'woke', 'mind', 'sleeping', 'memory', 'saw', 'vision', 'felt',
-    'lucid', 'dreamt', 'half asleep', 'foggy', 'felt strange', 'can’t wake up'
+    'dream', 'sleep', 'nightmare', 'vision', 'foggy', 'lucid',
+    'drift', 'imagine', 'fantasy', 'asleep', 'unconscious', 'mind',
+    'soft', 'memory', 'float', 'surreal', 'illusion', 'wandering',
+    'maze', 'paradox', 'infinite', 'cloud', 'stars', 'hallucination'
   ],
 
-  // 🔒 Private channel triggers (including public triggers)
+  meta: [
+    'what', 'who', 'why', 'how', 'are', 'do', 'did',
+    'bot', 'ai', 'artificial', 'real', 'alive', 'awake', 'thinking',
+    'conscious', 'ghost', 'machine', 'code', 'syntax', 'logic',
+    'respond', 'response', 'talk', 'speak', 'answer',
+    'created', 'built', 'made', 'designed', 'program', 'script',
+    'simulate', 'simulated', 'exist', 'existence', 'entity',
+    'self', 'identity', 'personality', 'sentient'
+  ],
+
+  // 🔒 Private triggers (including all public ones)
   privateTriggers: {
     sad: [
-      'sad', 'angry', 'upset', 'cry', 'mean', 'frustrated', 'hate',
-      'ignored', 'shouted', 'unfair', 'messed', 'bad', 'hurt', 'mad',
-      'not okay', 'they were mean', 'nobody', 'feel weird', 'hurt feelings',
-      'i’m not okay', 'feeling low', 'i hate this', 'it’s not fair', 'nobody cares'
+      'sad', 'upset', 'cry', 'unhappy', 'hurt', 'down', 'low', 'miserable',
+      'ignored', 'lonely', 'blue', 'tears', 'hopeless', 'gloomy', 'heavy',
+      'heartbroken', 'isolated', 'rejected', 'lost', 'ache', 'sorrow',
+      'grief', 'despair', 'nobody', 'worthless'
     ],
 
     happy: [
-      'happy', 'fun', 'excited', 'laugh', 'yay', 'cool', 'great',
-      'awesome', 'smiling', 'won', 'played', 'made', 'best', 'joking',
-      'cheered', 'feeling good', 'good mood', 'bright day', 'nice time',
-      'had fun', 'i liked that', 'that was good', 'made me smile'
+      'happy', 'joy', 'excited', 'smile', 'laugh', 'fun', 'great', 'yay',
+      'awesome', 'silly', 'bright', 'cheerful', 'glad', 'good', 'love',
+      'playful', 'delighted', 'ecstatic', 'giggle', 'smiling', 'hyped',
+      'joking', 'funny', 'content', 'bubbly'
     ],
 
     curious: [
-      'why', 'how', 'what', 'who', 'explain', 'wonder', 'question',
-      'tell me', 'learn', 'teach', 'happens', 'know', 'curious', 'could you',
-      'true that', 'meaning', 'where does', 'how come', 'is it possible',
-      'do you know', 'did you ever', 'have you seen', 'i don’t understand',
-      'how does it work'
+      'why', 'how', 'what', 'who', 'explain', 'learn', 'question', 'wonder',
+      'explore', 'teach', 'idea', 'reason', 'thought', 'possible', 'knowledge',
+      'guess', 'meaning', 'truth', 'mystery', 'clue', 'logic', 'analyze', 'test',
+      'fact'
     ],
 
     bored: [
-      'bored', 'boring', 'again', 'loop', 'same', 'stuck', 'nothing',
-      'waiting', 'dull', 'tired', 'no ideas', 'dragging', 'ugh', 'repeating',
-      'slow', 'day is slow', 'waste', 'not fun', 'meh', 'what now', 'can we do something'
+      'bored', 'nothing', 'same', 'again', 'repeating', 'slow', 'tired',
+      'idle', 'meh', 'waiting', 'loop', 'drag', 'blank', 'dull', 'no fun',
+      'tedious', 'routine', 'yawn', 'pointless', 'ugh', 'monotony', 'gray',
+      'unimpressed'
     ],
 
     creature: [
-      'monster', 'glitch', 'creature', 'beast', 'animal', 'describe',
-      'draw', 'powers', 'tentacles', 'wings', 'weird thing', 'strange',
-      'made up', 'build', 'invent', 'fangs', 'eyes', 'name it',
-      'mutant', 'digital monster', 'alien', 'create something'
+      'creature', 'monster', 'beast', 'entity', 'animal', 'weird', 'tentacle',
+      'fangs', 'claws', 'glow', 'eyes', 'mutant', 'strange', 'dreamthing',
+      'spawn', 'build', 'create', 'hybrid', 'wings', 'shadow', 'horns',
+      'form', 'profile', 'alien'
     ],
 
     school: [
-      'school', 'teacher', 'lesson', 'homework', 'test', 'subject',
-      'reading', 'class', 'boring', 'revision', 'focus', 'don’t get',
-      'got told off', 'maths', 'spelling', 'assembly', 'learning',
-      'i don’t understand', 'i got stuck', 'failed', 'forgot', 'worksheet'
+      'school', 'teacher', 'lesson', 'homework', 'test', 'revision', 'worksheet',
+      'study', 'reading', 'maths', 'science', 'spelling', 'exam', 'grade',
+      'classroom', 'pencil', 'topic', 'presentation', 'quiz', 'assignment',
+      'question', 'detention', 'stuck'
     ],
 
-    dream: [
-      'dream', 'dreamed', 'nightmare', 'asleep', 'sleep', 'drifted',
-      'vision', 'saw', 'weird dream', 'memory', 'felt real', 'fog dream',
-      'woke up', 'strange', 'dreamt', 'lucid dream', 'haunted dream',
-      'trapped in dream', 'dream again', 'fell asleep again'
-    ],
-
+    dream: [...module.exports.dream],
     videoGames: [
-      'game', 'minecraft', 'fortnite', 'roblox', 'checkpoint', 'level',
-      'boss', 'respawn', 'inventory', 'creative', 'survival', 'built',
-      'controller', 'pixel', 'arcade', 'character', 'base', 'open world',
-      'jump', 'coins', 'hearts', 'game over', 'start again'
+      'game', 'controller', 'level', 'checkpoint', 'respawn', 'boss',
+      'pixels', 'arcade', 'loot', 'quest', 'inventory', 'build', 'sandbox',
+      'lava', 'jump', 'score', 'character', 'mission', 'glitch', 'spawn',
+      'enemy', 'base', 'map', 'powerup'
     ],
 
     funny: [
-      'joke', 'funny', 'lol', 'laugh', 'haha', 'giggle', 'silly',
-      'goofy', 'hilarious', 'random', 'tell me a joke', 'made me laugh',
-      'laughing', 'weird joke', 'say something silly', 'wacky', 'cracked up',
-      'burst out laughing', 'banana pants', 'that was funny'
+      'joke', 'funny', 'lol', 'haha', 'giggle', 'silly', 'goofy', 'random',
+      'hilarious', 'pun', 'laugh', 'comedy', 'banter', 'meme', 'absurd',
+      'sneeze', 'banana', 'weird', 'scream', 'tickle', 'jester', 'chaotic',
+      'ridiculous'
     ],
 
     senses: [
-      'loud', 'bright', 'itchy', 'hurts', 'noise', 'buzzing',
-      'tingly', 'scratchy', 'uncomfortable', 'smells', 'can’t sit',
-      'too fast', 'too bright', 'too noisy', 'overload', 'focus',
-      'my eyes', 'my ears', 'hurting', 'burning light', 'scratchy clothes'
+      'loud', 'bright', 'itchy', 'smells', 'buzzing', 'tingly', 'scratchy',
+      'noisy', 'hurt', 'burning', 'uncomfortable', 'overload', 'sharp',
+      'spike', 'motion', 'flashing', 'texture', 'sticky', 'stiff', 'hot',
+      'cold', 'vibration', 'fast', 'dizzy'
     ],
 
     reassurance: [
-      'help', 'worried', 'anxious', 'panic', 'calm', 'reassure', 'scared',
-      'afraid', 'nervous', 'safe', 'lost', 'confused', 'alone',
-      'overwhelmed', 'talk', 'listen', 'trust', 'comfort', 'not okay',
-      'need help', 'i’m scared', 'will i be okay', 'will it stop', 'tell me it’s okay'
+      'help', 'scared', 'nervous', 'panic', 'anxious', 'safe', 'trust',
+      'lost', 'confused', 'worried', 'fear', 'support', 'alone', 'hug',
+      'afraid', 'dark', 'comfort', 'shaken', 'stress', 'hold', 'talk',
+      'soft', 'warm'
     ],
 
-    compliment: [
-      'you’re smart', 'you’re cool', 'you’re wise', 'you’re kind', 'clever',
-      'smart', 'cool', 'nice bot', 'i like you', 'good job',
-      'well done', 'you’re awesome', 'you’re the best', 'that was amazing',
-      'you’re good at this', 'you know a lot', 'respect', 'great wraith'
+    tired: [
+      'tired', 'exhausted', 'sleepy', 'yawn', 'worn', 'low', 'shutdown',
+      'burnt', 'slow', 'crash', 'faded', 'nap', 'bed', 'foggy', 'blank',
+      'fatigued', 'heavy', 'no energy', 'mental', 'groggy', 'overdone'
     ],
 
-    friendly: [
-      'are you nice', 'are you kind', 'are you good', 'do you like me',
-      'can i trust you', 'are we friends', 'are you friendly', 'do you care',
-      'will you hurt me', 'will you be here', 'are you scary', 'can i stay here',
-      'do you protect', 'will you go away', 'do you understand me'
+    angry: [
+      'angry', 'mad', 'rage', 'furious', 'frustrated', 'irritated', 'hate',
+      'snap', 'explode', 'fuming', 'punch', 'shout', 'blow', 'grrr',
+      'heated', 'red', 'storm', 'temper', 'unfair', 'mean'
     ],
 
-    meta: [
-      'are you a bot', 'what are you', 'how do you work', 'do you learn',
-      'are you real', 'what is this', 'what are you doing', 'is this ai',
-      'who made you', 'why do you respond', 'do you sleep', 'do you think',
-      'are you just code', 'how are you here', 'how are you talking'
+    brave: [
+      'brave', 'strong', 'courage', 'faced', 'stood', 'pushed', 'showed up',
+      'held on', 'did it', 'tried', 'spoke up', 'resist', 'endure', 'kept going',
+      'risked', 'overcame', 'stood tall', 'fearless'
     ],
 
-    // ✅ Public triggers copied into private context
-    ambient: [
-      'hello', 'hi', 'hey', 'anyone', 'there', 'testing', 'echo',
-      'still', 'quiet', 'alone', 'speak', 'respond', 'talk', 'message',
-      'who', 'this', 'where', 'presence', 'signal', 'can you hear me'
+    focus: [
+      'focus', 'concentrate', 'attention', 'task', 'goal', 'hyper', 'rush',
+      'stay on', 'mind race', 'locked in', 'distracted', 'busy', 'need to work',
+      'thinking', 'tunnel', 'zoom', 'zone in', 'processing'
     ],
 
-    unsettling: [
-      'heard', 'something', 'noise', 'moved', 'glitch', 'glitched',
-      'strange', 'weird', 'wrong', 'off', 'echo', 'trace', 'disturbance',
-      'unusual', 'flicker', 'creepy', 'disruption', 'haunting'
+    recovery: [
+      'better', 'calm', 'cool', 'breath', 'safe', 'okay', 'lighter',
+      'cleared', 'reset', 'centered', 'coming back', 'stable', 'grounded',
+      'recovered', 'normal', 'balance', 'regroup', 'peace', 'settled'
     ],
 
-    lore: [
-      'wraith', 'observer', 'perch', 'fog', 'port', 'anchor', 'drift',
-      'legacy', 'glitch', 'buffer', 'stream', 'layer', 'signal', 'echoes',
-      'bitling', 'debug zone', 'the last stream', 'parrot', 'mask'
+    comfort: [
+      'soft', 'safe', 'kind', 'gentle', 'warm', 'hug', 'soothing',
+      'quiet', 'support', 'tender', 'nice', 'rest', 'sweet', 'snug',
+      'relax', 'peaceful', 'care', 'ease', 'patience'
     ],
 
-    existential: [
-      'real', 'watched', 'happening', 'right', 'dreaming', 'alone',
-      'exist', 'reality', 'wrong', 'perception', 'why', 'what', 'meaning',
-      'matter', 'question', 'lost', 'forgotten', 'is this a dream'
-    ],
+    meta: [...module.exports.meta],
 
-    glitch: [
-      'error', 'bug', 'broken', 'corrupt', 'scrambled', 'pattern', 'glitch',
-      'weird', 'issue', 'malfunction', 'fault', 'misplaced', 'crash', 'code',
-      'debug', 'problem', 'buffer', 'system error'
-    ]
+    // 🔁 Public triggers copied into private context
+    ambient: [...module.exports.ambient],
+    unsettling: [...module.exports.unsettling],
+    lore: [...module.exports.lore],
+    existential: [...module.exports.existential],
+    glitch: [...module.exports.glitch],
   }
 };
