@@ -227,8 +227,8 @@ client.on('messageCreate', async (message) => {
     }
   }
 
-  // 📡 General public reply (60% chance)
-  if (Math.random() <= 0.6) {
+  // 📡 General public reply (40% chance)
+  if (Math.random() <= 0.4) {
     const replyOptions = responses[matchedCategory];
     if (Array.isArray(replyOptions)) {
       const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
