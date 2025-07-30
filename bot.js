@@ -1,6 +1,6 @@
 // === ENV SETUP ===
 require('dotenv').config();
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const http = require('http');
 
 const client = new Client({
@@ -42,23 +42,55 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
   const content = message.content.toLowerCase();
+  const userId = message.author.id;
 
   if (content === '!ping') return message.channel.send('Pong!');
-  if (content === '!help') return message.channel.send(`**Commands:**\n- !ping\n- !help\n- !wraithpause\n- !wraithresume\n- !forcecleanup`);
+  if (content === '!help') return message.channel.send(`**Commands:**\n- !ping\n- !help\n- !wraithpause\n- !wraithresume\n- !forcecleanup\n- !wraithsay`);
 
-  if (content === '!wraithpause' && message.author.id === '1176147684634144870') {
+  if (content === '!wraithpause' && userId === '1176147684634144870') {
     wraithPaused = true;
     return message.channel.send('Wraith has been paused.');
   }
 
-  if (content === '!wraithresume' && message.author.id === '1176147684634144870') {
+  if (content === '!wraithresume' && userId === '1176147684634144870') {
     wraithPaused = false;
     return message.channel.send('Wraith has resumed.');
   }
 
+  // === CUSTOM EMBED ANNOUNCEMENT ===
+  if (message.content.startsWith('!wraithsay') && userId === '1176147684634144870') {
+    const messageText = message.content.replace('!wraithsay', '').trim();
+
+    if (!messageText) {
+      return message.reply('Usage: `!wraithsay your message here`');
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle('🕯️ The Wraith Speaks')
+      .setDescription(messageText)
+      .setColor(0x5a1e6d)
+      .setFooter({ text: 'The Wraith has spoken...' })
+      .setTimestamp();
+
+    try {
+      const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+      if (announceChannel?.isTextBased()) {
+        await message.delete().catch(() => {});
+        await announceChannel.send({ embeds: [embed] });
+      } else {
+        return message.reply('Announcement channel is not available.');
+      }
+    } catch (err) {
+      console.error('[WRAITH EMBED ERROR]', err);
+      return message.reply('An error occurred while sending the Wraith\'s message.');
+    }
+
+    return;
+  }
+
   if (wraithPaused) return;
 
-  if (content === '!forcecleanup' && message.author.id === '1176147684634144870') {
+  if (content === '!forcecleanup' && userId === '1176147684634144870') {
     const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
     if (cleanupChannel && cleanupChannel.isTextBased()) {
       try {
