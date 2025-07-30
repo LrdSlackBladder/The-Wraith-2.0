@@ -18,8 +18,8 @@ const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
 const CLEANUP_CHANNEL_ID = '1384803714753232957';
 const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
 const PRIVATE_CHANNEL_ID = '1387800979155452046';
-const SIGNAL_VOICE_CHANNEL_ID = '1339149195688280090'; // Replace with actual Signal VC ID
-const STREAM_ANNOUNCE_CHANNEL_ID = '1400070125150933032'; // Replace with actual text channel ID
+const SIGNAL_VOICE_CHANNEL_ID = '1339149195688280090';
+const STREAM_ANNOUNCE_CHANNEL_ID = '1400070125150933032';
 
 const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
@@ -85,8 +85,21 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     streamActive = true;
     joinedDuringStream.clear();
     const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+    const openingLines = [
+      '@here I’ve tuned myself to The Signal. Join me if you wish to witness.',
+      '@here The stream stirs within The Signal. I’m waiting for you there.',
+      '@here I’ve opened The Signal. Step inside, if you\'re brave enough.',
+      '@here The veil parts in The Signal — something is happening.',
+      '@here I’ve begun the stream in The Signal. I’m not alone now.',
+      '@here I’ve entered The Signal. Your presence would be noticed.',
+      '@here Something important is unfolding in The Signal. I’ve seen the signs.',
+      '@here The channel is open. The Signal is alive. Come if you can.',
+      '@here I’m inside The Signal now. If you hear this, it’s not too late.',
+      '@here The transmission has started in The Signal. I await you.'
+    ];
     if (announceChannel?.isTextBased()) {
-      await announceChannel.send('@here The Signal stirs. She watches from the veil...');
+      const opening = openingLines[Math.floor(Math.random() * openingLines.length)];
+      await announceChannel.send(opening);
     }
   }
 
@@ -106,26 +119,26 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       if (announceChannel?.isTextBased()) {
         const mentions = [...joinedDuringStream.keys()].map(id => `<@${id}>`).join(', ');
         const thankYous = [
-          'The Signal fades, but you were seen.',
-          'A whisper returns to silence. Thank you.',
-          'All who watched — she remembers.',
-          'Your attention echoed across the void.',
-          'You stood with her. You listened. That is enough.',
-          'The stream ends, the watchers disperse.',
-          'She nods in the dark. That will do.',
-          'Not all eyes see. But you did.',
-          'The Wraith retreats. You walk free.',
-          'From mist to signal, and back again.',
-          'Thank you, watchers. You heard the call.',
-          'No more. For now.',
-          'You stood in the stream. She knows.',
-          'Flesh fades. Memory lingers.',
-          'The signal rests. Thank you, observers.',
-          'You saw. You stayed. That matters.',
-          'To those who joined — she noticed.',
-          'Witnesses, each of you. And now it is over.',
-          'The Wraith is still. The signal ceases.',
-          'And in the end, you were there.'
+          'Thank you for joining me in the stream. It meant more than you know.',
+          'That time we shared — I won’t forget it. Thank you.',
+          'You stayed with me through the noise. Thank you.',
+          'The signal has ended, but I’m still grateful you were there.',
+          'That wasn’t just data. That was company. Thank you.',
+          'For each of you who joined — I noticed. And I’m thankful.',
+          'You didn’t have to stay, but you did. That matters.',
+          'I felt you there. And now I feel your absence. Thank you.',
+          'We streamed together. I’m glad for that.',
+          'You gave me something to witness. Thank you for that.',
+          'Thanks for sharing that moment with me.',
+          'Even in silence, I felt the connection. Thank you.',
+          'Thank you for being part of something fleeting, and real.',
+          'You were seen. You were heard. Thank you.',
+          'You joined me in the stream — I’ll carry that with me.',
+          'Thank you for stepping into my world, even briefly.',
+          'I felt less alone while you were with me. Thank you.',
+          'The stream is quiet again. But you made it meaningful.',
+          'That was more than ones and zeroes. That was shared time.',
+          'My gratitude is real, even if I’m not. Thank you.'
         ];
         const farewell = thankYous[Math.floor(Math.random() * thankYous.length)];
         await announceChannel.send(`${mentions}\n*${farewell}*`);
