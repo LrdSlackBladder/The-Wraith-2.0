@@ -1,7 +1,6 @@
+// === ENV SETUP ===
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
-const responses = require('./data/responses');
-const triggers = require('./data/triggers');
 const http = require('http');
 
 const client = new Client({
@@ -14,255 +13,168 @@ const client = new Client({
   ]
 });
 
-// Channel & role IDs (replace these with actual channel IDs)
-const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452'; // Replace with actual role ID
-const CLEANUP_CHANNEL_ID = '1384803714753232957'; // Replace with actual channel ID for cleanup
-const ADMIN_LOG_CHANNEL_ID = '1387795257407569941'; // Replace with your log channel ID
-const PRIVATE_CHANNEL_ID = '1387800979155452046'; // Replace with private channel ID
+// === CONFIG ===
+const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
+const CLEANUP_CHANNEL_ID = '1384803714753232957';
+const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
+const PRIVATE_CHANNEL_ID = '1387800979155452046';
+const SIGNAL_VOICE_CHANNEL_ID = '1339149195688280090'; // Replace with actual Signal VC ID
+const STREAM_ANNOUNCE_CHANNEL_ID = '1400070125150933032'; // Replace with actual text channel ID
 
 const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
-
-// Flag to pause bot responses
+const joinedDuringStream = new Map();
+let streamActive = false;
 let wraithPaused = false;
 
-// Keep-alive ping
+// === KEEP-ALIVE ===
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('The Wraith is watching...\n');
 }).listen(process.env.PORT || 3000);
 
+// === READY ===
 client.once('ready', () => {
   console.log('[WRAITH] Observer is online...');
 });
 
+// === MESSAGE HANDLER ===
 client.on('messageCreate', async (message) => {
-  // Prevent bot from responding to itself
   if (message.author.bot) return;
-
   const content = message.content.toLowerCase();
 
-  // Log incoming message to see what the bot is receiving
-  console.log(`[DEBUG] Received message: ${content} from ${message.author.username} (${message.author.id})`);
+  if (content === '!ping') return message.channel.send('Pong!');
+  if (content === '!help') return message.channel.send(`**Commands:**\n- !ping\n- !help\n- !wraithpause\n- !wraithresume\n- !forcecleanup`);
 
-  // Command to pause the bot (only for specific user or admin)
-  if (content === '!wraithpause') {
-    console.log(`[DEBUG] Checking if user ID matches: ${message.author.id}`);
-    if (message.author.id === '1176147684634144870') {  // Replace with your actual User ID
-      console.log("Pause command received.");
-      wraithPaused = true;
-      return message.channel.send("Wraith has been paused.");
-    } else {
-      console.log("Pause command failed: User ID does not match.");
-    }
+  if (content === '!wraithpause' && message.author.id === '1176147684634144870') {
+    wraithPaused = true;
+    return message.channel.send('Wraith has been paused.');
   }
 
-  // Command to resume the bot (only for specific user or admin)
-  if (content === '!wraithresume') {
-    console.log(`[DEBUG] Checking if user ID matches: ${message.author.id}`);
-    if (message.author.id === '1176147684634144870') {  // Replace with your actual User ID
-      console.log("Resume command received.");
-      wraithPaused = false;
-      return message.channel.send("Wraith has resumed.");
-    } else {
-      console.log("Resume command failed: User ID does not match.");
-    }
+  if (content === '!wraithresume' && message.author.id === '1176147684634144870') {
+    wraithPaused = false;
+    return message.channel.send('Wraith has resumed.');
   }
 
-  // If the bot is paused, do not process any further commands
-  if (wraithPaused) {
-    console.log("[DEBUG] Wraith is paused. Commands are being ignored.");
-    return;
-  }
+  if (wraithPaused) return;
 
-  // Handle other commands (e.g., !ping, !help, etc.)
-  if (content === '!ping') {
-    return message.channel.send('Pong!');
-  }
-
-  if (content === '!help') {
-    const helpMessage = `
-      **Available Commands:**
-      - !ping: Responds with "Pong!"
-      - !help: Lists all available commands
-      - !wraithpause: Pauses the bot's responses (admin only)
-      - !wraithresume: Resumes the bot's responses (admin only)
-      - !forcecleanup: Forces cleanup of old messages (admin only)
-    `;
-    return message.channel.send(helpMessage);
-  }
-
-  // Command to force cleanup of messages older than 24h
   if (content === '!forcecleanup' && message.author.id === '1176147684634144870') {
-    console.log("Force cleanup command received.");
-    // Trigger cleanup logic
     const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
     if (cleanupChannel && cleanupChannel.isTextBased()) {
       try {
         const messages = await cleanupChannel.messages.fetch({ limit: 100 });
-        const now = Date.now();
-        const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
-
+        const oldMessages = messages.filter(msg => Date.now() - msg.createdTimestamp > 24 * 60 * 60 * 1000);
         if (oldMessages.size > 0) {
           await cleanupChannel.bulkDelete(oldMessages, true);
           await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
         }
       } catch (err) {
         console.error('[FORCE CLEANUP ERROR]', err);
-        message.channel.send('An error occurred while performing cleanup.');
+        message.channel.send('An error occurred during cleanup.');
       }
-    } else {
-      message.channel.send('Cleanup channel not found!');
-    }
-    return;
-  }
-
-  // Your existing logic for other responses (reactionary, private themes, etc.)
-  const isPrivate = message.channel.id === PRIVATE_CHANNEL_ID;
-  const isMention = message.mentions.has(client.user);
-
-  // Respond to @ping in public channels
-  if (isMention && !isPrivate) {
-    const reply = responses.ambient[Math.floor(Math.random() * responses.ambient.length)];
-    return message.channel.send(`*${reply}*`);
-  }
-
-  // Private channel logic (message processing)
-  if (isPrivate) {
-    const contentWords = content.split(/\s+/);
-
-    // 🎞️ GIF detection (robust for Tenor, Discord, Giphy)
-    const hasGif =
-      [...message.attachments.values()].some(file =>
-        file.contentType?.toLowerCase().includes('gif') ||
-        file.url.toLowerCase().endsWith('.gif')
-      ) ||
-      /(tenor\.com\/view\/.+-gif-\d+)|(giphy\.com\/gifs\/)|(media\.discordapp\.net\/attachments\/.+\.gif)/i.test(content);
-
-    if (hasGif && Array.isArray(responses.gifDetected) && responses.gifDetected.length > 0) {
-      const gifReply = responses.gifDetected[Math.floor(Math.random() * responses.gifDetected.length)];
-      await message.channel.sendTyping();
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
-      return message.channel.send(`*${gifReply}*`);
-    }
-
-    // 🧠 Reactionary response (best match logic)
-    let bestReactionary = null;
-    let reactionaryScore = 0;
-
-    if (Array.isArray(responses.reactionary)) {
-      for (const r of responses.reactionary) {
-        let score = 0;
-        for (const trigger of r.triggers) {
-          const regex = new RegExp(`\\b${trigger.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-          if (regex.test(content)) score++;
-        }
-        if (score > reactionaryScore) {
-          reactionaryScore = score;
-          bestReactionary = r;
-        }
-      }
-
-      if (bestReactionary && reactionaryScore > 0) {
-        await message.channel.sendTyping();
-        await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 1500));
-        return message.channel.send(`*${bestReactionary.text}*`);
-      }
-    }
-
-    // 🔒 Private theme category match (e.g., sad, bored)
-    let bestTheme = null;
-    let bestThemeScore = 0;
-
-    for (const [category, words] of Object.entries(triggers.privateTriggers)) {
-      let score = words.filter(trigger => content.includes(trigger)).length;
-      if (score > bestThemeScore) {
-        bestThemeScore = score;
-        bestTheme = category;
-      }
-    }
-
-    if (bestTheme && responses.privateThemes[bestTheme]) {
-      const reply = responses.privateThemes[bestTheme][Math.floor(Math.random() * responses.privateThemes[bestTheme].length)];
-      await message.channel.sendTyping();
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-      return message.channel.send(`*${reply}*`);
-    }
-
-    // 🛑 Fallback: neutral reply if no theme or reaction matched
-    if (Array.isArray(responses.private)) {
-      const reply = responses.private[Math.floor(Math.random() * responses.private.length)];
-      await message.channel.sendTyping();
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-      return message.channel.send(`*${reply}*`);
-    }
-
-    return;
-  }
-
-  // 🌐 Public triggers logic (for other responses)
-  let matchedCategory = null;
-
-  for (const [category, triggerWords] of Object.entries(triggers)) {
-    if (Array.isArray(triggerWords) && triggerWords.some(trigger => content.includes(trigger))) {
-      matchedCategory = category;
-      break;
-    }
-  }
-
-  if (!matchedCategory) return;
-
-  // 🧠 Lore-only (Signal Watchers only)
-  const isSignalWatcher = message.member?.roles.cache.has(SIGNAL_WATCHER_ROLE_ID);
-
-  if (matchedCategory === 'lore' && isSignalWatcher && Math.random() <= 0.2) {
-    const lastTime = loreCooldown.get(message.author.id) || 0;
-    const now = Date.now();
-    const cooldownMs = LORE_COOLDOWN_MINUTES * 60 * 1000;
-
-    if (now - lastTime > cooldownMs) {
-      const exclusiveReply = responses.loreExclusive[Math.floor(Math.random() * responses.loreExclusive.length)];
-      loreCooldown.set(message.author.id, now);
-      return message.channel.send(`*${exclusiveReply}*`);
-    }
-  }
-
-  // 📡 General public reply (40% chance)
-  if (Math.random() <= 0.4) {
-    const replyOptions = responses[matchedCategory];
-    if (Array.isArray(replyOptions)) {
-      const reply = replyOptions[Math.floor(Math.random() * replyOptions.length)];
-      return message.channel.send(`*${reply}*`);
     }
   }
 });
 
-// 🧹 Daily cleanup of messages older than 24h
+// === STREAM MONITORING ===
+client.on('voiceStateUpdate', async (oldState, newState) => {
+  const member = newState.member;
+  const voiceChannel = newState.channel;
+
+  if (voiceChannel && voiceChannel.id === SIGNAL_VOICE_CHANNEL_ID && !streamActive) {
+    streamActive = true;
+    joinedDuringStream.clear();
+    const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+    if (announceChannel?.isTextBased()) {
+      await announceChannel.send('@here The Signal stirs. She watches from the veil...');
+    }
+  }
+
+  if (voiceChannel && voiceChannel.id === SIGNAL_VOICE_CHANNEL_ID) {
+    const guildMember = await member.guild.members.fetch(member.id);
+    if (!guildMember.roles.cache.has(SIGNAL_WATCHER_ROLE_ID)) {
+      await guildMember.roles.add(SIGNAL_WATCHER_ROLE_ID);
+      joinedDuringStream.set(member.id, Date.now());
+    }
+  }
+
+  if (!newState.channel && oldState.channel?.id === SIGNAL_VOICE_CHANNEL_ID) {
+    const signalChannel = oldState.channel;
+    if (signalChannel.members.size === 0 && streamActive) {
+      streamActive = false;
+      const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+      if (announceChannel?.isTextBased()) {
+        const mentions = [...joinedDuringStream.keys()].map(id => `<@${id}>`).join(', ');
+        const thankYous = [
+          'The Signal fades, but you were seen.',
+          'A whisper returns to silence. Thank you.',
+          'All who watched — she remembers.',
+          'Your attention echoed across the void.',
+          'You stood with her. You listened. That is enough.',
+          'The stream ends, the watchers disperse.',
+          'She nods in the dark. That will do.',
+          'Not all eyes see. But you did.',
+          'The Wraith retreats. You walk free.',
+          'From mist to signal, and back again.',
+          'Thank you, watchers. You heard the call.',
+          'No more. For now.',
+          'You stood in the stream. She knows.',
+          'Flesh fades. Memory lingers.',
+          'The signal rests. Thank you, observers.',
+          'You saw. You stayed. That matters.',
+          'To those who joined — she noticed.',
+          'Witnesses, each of you. And now it is over.',
+          'The Wraith is still. The signal ceases.',
+          'And in the end, you were there.'
+        ];
+        const farewell = thankYous[Math.floor(Math.random() * thankYous.length)];
+        await announceChannel.send(`${mentions}\n*${farewell}*`);
+      }
+    }
+  }
+});
+
+// === ROLE CLEANUP TASK ===
+setInterval(async () => {
+  const now = Date.now();
+  for (const [userId, timestamp] of joinedDuringStream.entries()) {
+    if (now - timestamp > 7 * 24 * 60 * 60 * 1000) {
+      try {
+        const guild = client.guilds.cache.first();
+        const member = await guild.members.fetch(userId);
+        if (member.roles.cache.has(SIGNAL_WATCHER_ROLE_ID)) {
+          await member.roles.remove(SIGNAL_WATCHER_ROLE_ID);
+          joinedDuringStream.delete(userId);
+        }
+      } catch (e) {
+        console.error(`Failed to remove role for ${userId}`, e);
+      }
+    }
+  }
+}, 60 * 60 * 1000);
+
+// === DAILY CLEANUP ===
 setInterval(async () => {
   const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
   const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-
-  if (cleanupChannel && cleanupChannel.isTextBased()) {
+  if (cleanupChannel?.isTextBased()) {
     try {
       const messages = await cleanupChannel.messages.fetch({ limit: 100 });
-      const now = Date.now();
-      const oldMessages = messages.filter(msg => now - msg.createdTimestamp > 24 * 60 * 60 * 1000);
-
+      const oldMessages = messages.filter(msg => Date.now() - msg.createdTimestamp > 24 * 60 * 60 * 1000);
       if (oldMessages.size > 0) {
         await cleanupChannel.bulkDelete(oldMessages, true);
         await cleanupChannel.send('*[WRAITH OBSERVER]: Signal disruption stabilised. Residual static cleared.*');
-
-        if (logChannel && logChannel.isTextBased()) {
+        if (logChannel?.isTextBased()) {
           await logChannel.send(`[WRAITH SYSTEM]: Cleanup completed — ${oldMessages.size} items removed.`);
         }
       }
     } catch (err) {
-      console.error('[WRAITH CLEANUP ERROR]', err);
+      console.error('[CLEANUP ERROR]', err);
     }
   }
-}, 24 * 60 * 60 * 1000); // Every 24h
+}, 24 * 60 * 60 * 1000);
 
-// 🛡️ Crash protection
+// === CRASH GUARD ===
 process.on('uncaughtException', err => console.error('Uncaught exception:', err));
 process.on('unhandledRejection', err => console.error('Unhandled rejection:', err));
 
