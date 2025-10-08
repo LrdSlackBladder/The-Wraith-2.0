@@ -14,6 +14,7 @@ const client = new Client({
 });
 
 // === CONFIG ===
+const OWNER_ID = '1176147684634144870';
 const SIGNAL_WATCHER_ROLE_ID = '1384828597742866452';
 const CLEANUP_CHANNEL_ID = '1384803714753232957';
 const ADMIN_LOG_CHANNEL_ID = '1387795257407569941';
@@ -24,7 +25,7 @@ const STREAM_ANNOUNCE_CHANNEL_ID = '1400070125150933032';
 const LORE_COOLDOWN_MINUTES = 60;
 const loreCooldown = new Map();
 const joinedDuringStream = new Map();
-let streamActive = false;
+// removed: let streamActive = false; // (no longer used)
 let wraithPaused = false;
 
 // === KEEP-ALIVE ===
@@ -45,24 +46,36 @@ client.on('messageCreate', async (message) => {
   const userId = message.author.id;
 
   if (content === '!ping') return message.channel.send('Pong!');
-  if (content === '!help') return message.channel.send(`**Commands:**\n- !ping\n- !help\n- !wraithpause\n- !wraithresume\n- !forcecleanup\n- !wraithsay`);
+  if (content === '!help') {
+    return message.channel.send(
+      `**Commands:**\n- !ping\n- !help\n- !wraithpause\n- !wraithresume\n- !forcecleanup\n- !wraithsay`
+    );
+  }
 
-  if (content === '!wraithpause' && userId === '1176147684634144870') {
+  if (content === '!wraithpause' && userId === OWNER_ID) {
     wraithPaused = true;
     return message.channel.send('Wraith has been paused.');
   }
 
-  if (content === '!wraithresume' && userId === '1176147684634144870') {
+  if (content === '!wraithresume' && userId === OWNER_ID) {
     wraithPaused = false;
     return message.channel.send('Wraith has resumed.');
   }
 
-  // === CUSTOM EMBED ANNOUNCEMENT ===
-  if (message.content.startsWith('!wraithsay') && userId === '1176147684634144870') {
+  // === CUSTOM EMBED ANNOUNCEMENT (manual-only, rate-limited) ===
+  const ANNOUNCE_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+  if (typeof global.lastManualAnnounceAt === 'undefined') global.lastManualAnnounceAt = 0;
+
+  if (message.content.startsWith('!wraithsay') && userId === OWNER_ID) {
     const messageText = message.content.replace('!wraithsay', '').trim();
 
     if (!messageText) {
       return message.reply('Usage: `!wraithsay your message here`');
+    }
+
+    if (Date.now() - global.lastManualAnnounceAt < ANNOUNCE_COOLDOWN_MS) {
+      const wait = Math.ceil((ANNOUNCE_COOLDOWN_MS - (Date.now() - global.lastManualAnnounceAt)) / 60000);
+      return message.reply(`Cooldown active. Try again in ~${wait} min.`);
     }
 
     const embed = new EmbedBuilder()
@@ -74,9 +87,14 @@ client.on('messageCreate', async (message) => {
 
     try {
       const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+      const logChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
       if (announceChannel?.isTextBased()) {
         await message.delete().catch(() => {});
         await announceChannel.send({ embeds: [embed] });
+        global.lastManualAnnounceAt = Date.now();
+        if (logChannel?.isTextBased()) {
+          await logChannel.send(`[WRAITH] Manual announce by <@${OWNER_ID}> → <#${STREAM_ANNOUNCE_CHANNEL_ID}>`);
+        }
       } else {
         return message.reply('Announcement channel is not available.');
       }
@@ -90,7 +108,7 @@ client.on('messageCreate', async (message) => {
 
   if (wraithPaused) return;
 
-  if (content === '!forcecleanup' && userId === '1176147684634144870') {
+  if (content === '!forcecleanup' && userId === OWNER_ID) {
     const cleanupChannel = await client.channels.fetch(CLEANUP_CHANNEL_ID);
     if (cleanupChannel && cleanupChannel.isTextBased()) {
       try {
@@ -108,74 +126,26 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// === STREAM MONITORING ===
+// === STREAM MONITORING (no auto-announcements) ===
 client.on('voiceStateUpdate', async (oldState, newState) => {
-  const member = newState.member;
-  const voiceChannel = newState.channel;
+  try {
+    const member = newState.member;
+    const voiceChannel = newState.channel;
 
-  if (voiceChannel && voiceChannel.id === SIGNAL_VOICE_CHANNEL_ID && !streamActive) {
-    streamActive = true;
-    joinedDuringStream.clear();
-    const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
-    const openingLines = [
-      '@here I’ve tuned myself to The Signal. Join me if you wish to witness.',
-      '@here The stream stirs within The Signal. I’m waiting for you there.',
-      '@here I’ve opened The Signal. Step inside, if you\'re brave enough.',
-      '@here The veil parts in The Signal — something is happening.',
-      '@here I’ve begun the stream in The Signal. I’m not alone now.',
-      '@here I’ve entered The Signal. Your presence would be noticed.',
-      '@here Something important is unfolding in The Signal. I’ve seen the signs.',
-      '@here The channel is open. The Signal is alive. Come if you can.',
-      '@here I’m inside The Signal now. If you hear this, it’s not too late.',
-      '@here The transmission has started in The Signal. I await you.'
-    ];
-    if (announceChannel?.isTextBased()) {
-      const opening = openingLines[Math.floor(Math.random() * openingLines.length)];
-      await announceChannel.send(opening);
-    }
-  }
-
-  if (voiceChannel && voiceChannel.id === SIGNAL_VOICE_CHANNEL_ID) {
-    const guildMember = await member.guild.members.fetch(member.id);
-    if (!guildMember.roles.cache.has(SIGNAL_WATCHER_ROLE_ID)) {
-      await guildMember.roles.add(SIGNAL_WATCHER_ROLE_ID);
-      joinedDuringStream.set(member.id, Date.now());
-    }
-  }
-
-  if (!newState.channel && oldState.channel?.id === SIGNAL_VOICE_CHANNEL_ID) {
-    const signalChannel = oldState.channel;
-    if (signalChannel.members.size === 0 && streamActive) {
-      streamActive = false;
-      const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
-      if (announceChannel?.isTextBased()) {
-        const mentions = [...joinedDuringStream.keys()].map(id => `<@${id}>`).join(', ');
-        const thankYous = [
-          'Thank you for joining me in the stream. It meant more than you know.',
-          'That time we shared — I won’t forget it. Thank you.',
-          'You stayed with me through the noise. Thank you.',
-          'The signal has ended, but I’m still grateful you were there.',
-          'That wasn’t just data. That was company. Thank you.',
-          'For each of you who joined — I noticed. And I’m thankful.',
-          'You didn’t have to stay, but you did. That matters.',
-          'I felt you there. And now I feel your absence. Thank you.',
-          'We streamed together. I’m glad for that.',
-          'You gave me something to witness. Thank you for that.',
-          'Thanks for sharing that moment with me.',
-          'Even in silence, I felt the connection. Thank you.',
-          'Thank you for being part of something fleeting, and real.',
-          'You were seen. You were heard. Thank you.',
-          'You joined me in the stream — I’ll carry that with me.',
-          'Thank you for stepping into my world, even briefly.',
-          'I felt less alone while you were with me. Thank you.',
-          'The stream is quiet again. But you made it meaningful.',
-          'That was more than ones and zeroes. That was shared time.',
-          'My gratitude is real, even if I’m not. Thank you.'
-        ];
-        const farewell = thankYous[Math.floor(Math.random() * thankYous.length)];
-        await announceChannel.send(`${mentions}\n*${farewell}*`);
+    // Grant role when joining the Signal voice channel
+    if (voiceChannel && voiceChannel.id === SIGNAL_VOICE_CHANNEL_ID) {
+      const guildMember = await member.guild.members.fetch(member.id);
+      if (!guildMember.roles.cache.has(SIGNAL_WATCHER_ROLE_ID)) {
+        await guildMember.roles.add(SIGNAL_WATCHER_ROLE_ID);
+        joinedDuringStream.set(member.id, Date.now()); // kept for 7-day cleanup
       }
     }
+
+    // No auto "I'm live" announcements
+    // No end-of-stream thank-you announcements
+
+  } catch (err) {
+    console.error('[voiceStateUpdate error]', err);
   }
 });
 
