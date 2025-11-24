@@ -18,7 +18,7 @@ const client = new Client({
 });
 
 // === CONFIG ===
-const STREAM_ANNOUNCE_CHANNEL_ID = '1400070125150933032';
+const STREAM_ANNOUNCE_CHANNEL_ID = '1339149195688280085';
 
 // Cooldown per user so toggling stream on/off does not spam
 const STREAM_USER_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
