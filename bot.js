@@ -98,6 +98,7 @@ client.once('ready', () => {
         const start = ev.scheduledStartTimestamp;
         const diff = start - now;
 
+        // Announce once when event is within next 6 hours
         const withinSixHours = diff > 0 && diff <= 6 * 60 * 60 * 1000;
         if (!withinSixHours) continue;
 
@@ -111,9 +112,10 @@ client.once('ready', () => {
         const line  = wraithLineForEvent();
         const title = pick(genericEventTitles)(ev.name);
 
-        const link = ev.channelId
+        // Build VC link if there is a channel, otherwise fall back to event url
+        const vcLink = ev.channelId
           ? `https://discord.com/channels/${guild.id}/${ev.channelId}`
-          : ev.url;
+          : null;
 
         const embed = new EmbedBuilder()
           .setTitle(title)
@@ -128,15 +130,30 @@ client.once('ready', () => {
           .setFooter({ text: "The Wraith marks the hours…" })
           .setTimestamp();
 
-        const row = new ActionRowBuilder().addComponents(
+        // Two buttons: always event card, plus VC if available
+        const buttons = [
           new ButtonBuilder()
-            .setLabel("Open Event")
+            .setLabel("Open Event Card")
             .setStyle(ButtonStyle.Link)
-            .setURL(link)
-        );
+            .setURL(ev.url)
+        ];
 
+        if (vcLink) {
+          buttons.push(
+            new ButtonBuilder()
+              .setLabel("Join VC")
+              .setStyle(ButtonStyle.Link)
+              .setURL(vcLink)
+          );
+        }
+
+        const row = new ActionRowBuilder().addComponents(buttons);
+
+        // Content includes @here ping and the event card link in chat
         await announceChannel.send({
-          content: "@here",
+          content:
+            `@here\n` +
+            `The card is here if you want the full details: ${ev.url}`,
           embeds: [embed],
           components: [row],
           allowedMentions: { parse: ["everyone"] }
@@ -154,11 +171,13 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const member = newState.member;
     if (!member) return;
 
+    // Must be in VC
     if (!newState.channelId) return;
 
     const wasStreaming = !!(oldState.streaming || oldState.selfStream);
     const isStreaming  = !!(newState.streaming || newState.selfStream);
 
+    // Only trigger when streaming STARTS
     if (!wasStreaming && isStreaming) {
       const now = Date.now();
       const last = streamCooldowns.get(member.id) || 0;
@@ -250,6 +269,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         allowedMentions: { parse: ["everyone", "users"] }
       });
     }
+
   } catch (err) {
     console.error("[WRAITH STREAM ERROR]", err);
   }
