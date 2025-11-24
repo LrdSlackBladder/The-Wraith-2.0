@@ -9,24 +9,147 @@ const {
   ButtonStyle
 } = require('discord.js');
 
+const cron = require("node-cron");
+
 // === CLIENT ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildScheduledEvents
   ]
 });
 
 // === CONFIG ===
-const STREAM_ANNOUNCE_CHANNEL_ID = '1339149195688280085';
+const EVENT_ANNOUNCE_CHANNEL_ID  = '1440692270989967442'; // general event announcements
+const STREAM_ANNOUNCE_CHANNEL_ID = '1339149195688280085'; // stream announcements
 
 // Cooldown per user so toggling stream on/off does not spam
 const STREAM_USER_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 const streamCooldowns = new Map();
 
+// Track which scheduled events we've already announced (once per event version)
+const announcedEvents = new Map();
+const ANNOUNCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// === STYLE POOLS ===
+const glyphs = [
+  "◈━━ signal shift ━━◈",
+  "⟡⟡ current distortion ⟡⟡",
+  "█▓▒▌ interference rising ▐▒▓█",
+  "⧖▰⧗ static bloom ⧗▰⧖",
+  "⋘◖◗⋙ hull resonance ⋘◖◗⋙",
+  "▞▚▞▚ flux fracture ▚▞▚▞",
+  "⟡──────◊◦◊──────⟡",
+  "▁▂▃▄▄██▄▄▃▂▁ signal surge"
+];
+
+const genericEventTitles = [
+  (n) => `⏳ Incoming in 6 hours: ${n}`,
+  (n) => `📣 Ahead on the current: ${n}`,
+  (n) => `🕯️ Tonight in the Perch: ${n}`,
+  (n) => `⚡ Event forming: ${n}`,
+  (n) => `🌘 The schedule stirs: ${n}`
+];
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function wraithLineForEvent() {
+  return pick([
+    "The Wraith feels the timetable shift. Six hours remain.",
+    "A quiet tremor runs through the hull. Something is on the way.",
+    "The current bends toward the coming hour. Mark it now.",
+    "The ship has begun to make room for what is due.",
+    "The Perch will gather when the time comes. Six hours to go.",
+    "Something stirs in the schedule. The Wraith is already listening.",
+    "A soft pull in the signal says: remember this time.",
+    "The hours tilt toward us. Let the thought settle early."
+  ]);
+}
+
 // === READY ===
 client.once('ready', () => {
-  console.log(`[WRAITH STREAM BOT] Online as ${client.user.tag}`);
+  console.log(`[WRAITH BOT] Online as ${client.user.tag}`);
+
+  // === SCHEDULED EVENT ANNOUNCER ===
+  // Checks every minute, announces ONCE when an event enters the 6-hour window.
+  cron.schedule("* * * * *", async () => {
+    const now = Date.now();
+
+    // Cleanup old cache entries
+    for (const [key, ts] of announcedEvents.entries()) {
+      if (now - ts > ANNOUNCE_CACHE_TTL_MS) announcedEvents.delete(key);
+    }
+
+    for (const guild of client.guilds.cache.values()) {
+      let events;
+      try {
+        events = await guild.scheduledEvents.fetch();
+      } catch (err) {
+        console.error("[WRAITH EVENT FETCH ERROR]", err);
+        continue;
+      }
+
+      const upcoming = events.filter(ev =>
+        ev.scheduledStartTimestamp &&
+        ev.status !== 3 // not cancelled
+      );
+
+      for (const ev of upcoming.values()) {
+        const start = ev.scheduledStartTimestamp;
+        const diff = start - now;
+
+        // Only care about events within next 6 hours
+        const withinSixHours = diff > 0 && diff <= 6 * 60 * 60 * 1000;
+        if (!withinSixHours) continue;
+
+        const announceKey = `${ev.id}:${start}`;
+        if (announcedEvents.has(announceKey)) continue;
+
+        const announceChannel = guild.channels.cache.get(EVENT_ANNOUNCE_CHANNEL_ID);
+        if (!announceChannel?.isTextBased()) continue;
+
+        const flare = pick(glyphs);
+        const line  = wraithLineForEvent();
+        const title = pick(genericEventTitles)(ev.name);
+
+        const link = ev.channelId
+          ? `https://discord.com/channels/${guild.id}/${ev.channelId}`
+          : ev.url;
+
+        const embed = new EmbedBuilder()
+          .setTitle(title)
+          .setDescription(
+            `${flare}\n\n` +
+            `${line}\n\n` +
+            `Start Time: <t:${Math.floor(start / 1000)}:F>\n` +
+            `Countdown: <t:${Math.floor(start / 1000)}:R>\n\n` +
+            `If you are drifting in later, anchor this now.`
+          )
+          .setColor(0x5a1e6d)
+          .setFooter({ text: "The Wraith marks the hours…" })
+          .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Open Event")
+            .setStyle(ButtonStyle.Link)
+            .setURL(link)
+        );
+
+        await announceChannel.send({
+          content: "@here",
+          embeds: [embed],
+          components: [row],
+          allowedMentions: { parse: ["everyone"] }
+        });
+
+        announcedEvents.set(announceKey, now);
+      }
+    }
+  });
 });
 
 // === STREAM DETECTION ===
@@ -58,67 +181,70 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const voiceChannelId = newState.channelId;
       const vcLink = `https://discord.com/channels/${guildId}/${voiceChannelId}`;
 
-      // === REFINED CHAOTIC GLYPHS (top flare) ===
-      const glyphs = [
-        "◈━━ signal shift ━━◈",
-        "⟡⟡ current distortion ⟡⟡",
-        "█▓▒▌ interference rising ▐▒▓█",
-        "⧖▰⧗ static bloom ⧗▰⧖",
-        "⋘◖◗⋙ hull resonance ⋘◖◗⋙",
-        "▞▚▞▚ flux fracture ▚▞▚▞",
-        "⟡──────◊◦◊──────⟡",
-        "▁▂▃▄▄██▄▄▃▂▁ signal surge"
-      ];
-      const flare = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const flare = pick(glyphs);
 
-      // === MEDIUM HYPE WRAITH ANNOUNCEMENTS (no duplicate @user lines) ===
+      // Expanded organic Wraith stream announcements
       const announcements = [
         {
           title: "📡 A Signal Rises",
           body: (name) =>
             `**${name} is live.**\n\n` +
-            `The Wraith feels the stream ignite and turns her gaze toward it.\n` +
-            `Come **watch**, come **play**, or come **lurk** and feed the chaos.\n\n` +
-            `The door is open. The current is warm.`
+            `The hull hums and the air shifts. Something good is starting.\n` +
+            `Come to **watch**, come to **play**, or drift in and keep them company.\n\n` +
+            `The door is open and the current is warm.`
         },
         {
           title: "🕯️ The Wraith Calls",
           body: (name) =>
             `**${name} has gone live.**\n\n` +
-            `A new broadcast lights the hull.\n` +
-            `Drop into VC, pull up a seat, or drift in to watch the madness unfold.\n\n` +
-            `All hands welcome in the signal.`
+            `A fresh broadcast lights the deck.\n` +
+            `If your hands are free, jump in. If your brain is tired, lurk and breathe.\n\n` +
+            `Either way, the signal wants you nearby.`
         },
         {
           title: "⚡ The Current Shifts",
           body: (name) =>
             `**${name} is streaming now.**\n\n` +
-            `The ship hums with it.\n` +
-            `If you are up for a run, a watch, or a bit of friendly heckling, get in here.\n\n` +
-            `The stream is open.`
+            `You can feel it. The ship does.\n` +
+            `Pull up a seat, hop into VC, or roll in late with snacks and chaos.\n\n` +
+            `We are live.`
         },
         {
           title: "🌘 A Window Opens",
           body: (name) =>
             `**${name} is live right now.**\n\n` +
-            `The Wraith has opened the way.\n` +
-            `Step through to **play**, settle in to **watch**, or just drop by and say hi.\n\n` +
-            `The signal is strong tonight.`
+            `A little tear in the routine. A place to gather.\n` +
+            `Drop in for a run, a laugh, or a quiet watch while the world slows down.\n\n` +
+            `The Wraith holds the door.`
+        },
+        {
+          title: "🔥 The Perch Assembles",
+          body: (name) =>
+            `**${name} just lit the signal.**\n\n` +
+            `No schedule, no warning, just that familiar spark.\n` +
+            `If you are around, come be part of it. If not, catch the echo later.\n\n` +
+            `The stream is alive.`
+        },
+        {
+          title: "🛰️ Broadcast Detected",
+          body: (name) =>
+            `**${name} is live.**\n\n` +
+            `The Wraith caught it the moment it flared.\n` +
+            `Whether you join to play or lurk, your presence feeds the vibe.\n\n` +
+            `Signal is steady. Come through.`
         }
       ];
 
-      const pick = announcements[Math.floor(Math.random() * announcements.length)];
-      const bodyText = pick.body(member.displayName);
+      const pickAnnounce = pick(announcements);
+      const bodyText = pickAnnounce.body(member.displayName);
 
-      // === EMBED ===
       const embed = new EmbedBuilder()
-        .setTitle(pick.title)
+        .setTitle(pickAnnounce.title)
         .setDescription(`${flare}\n\n${bodyText}`)
         .setColor(0x5a1e6d)
         .setFooter({ text: "The Wraith listens…" })
         .setTimestamp();
 
-      // === BUTTON TO VC ===
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setLabel("Join the Stream")
@@ -126,7 +252,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
           .setURL(vcLink)
       );
 
-      // Put pings in content so Discord always notifies
       await announceChannel.send({
         content: `@here <@${member.id}>`,
         embeds: [embed],
