@@ -35,10 +35,14 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const member = newState.member;
     if (!member) return;
 
-    const wasStreaming = oldState.streaming;
-    const isStreaming = newState.streaming;
+    // Must be in a VC to be streaming
+    if (!newState.channelId) return;
 
-    // Only trigger on stream start
+    // Discord can report Go Live as streaming or selfStream depending on client
+    const wasStreaming = !!(oldState.streaming || oldState.selfStream);
+    const isStreaming  = !!(newState.streaming || newState.selfStream);
+
+    // Only trigger when streaming STARTS
     if (!wasStreaming && isStreaming) {
       const now = Date.now();
       const last = streamCooldowns.get(member.id) || 0;
@@ -56,63 +60,60 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
       // === REFINED CHAOTIC GLYPHS (top flare) ===
       const glyphs = [
-        "◈─── signal shift detected ───◈",
-        "⟡⟡ ⟢ current distortion ⟣ ⟡⟡",
+        "◈━━ signal shift ━━◈",
+        "⟡⟡ current distortion ⟡⟡",
         "█▓▒▌ interference rising ▐▒▓█",
         "⧖▰⧗ static bloom ⧗▰⧖",
         "⋘◖◗⋙ hull resonance ⋘◖◗⋙",
         "▞▚▞▚ flux fracture ▚▞▚▞",
         "⟡──────◊◦◊──────⟡",
-        "▁▂▃▄▄██▄▄▃▂▁  signal surge"
+        "▁▂▃▄▄██▄▄▃▂▁ signal surge"
       ];
-      const glyphLine = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const flare = glyphs[Math.floor(Math.random() * glyphs.length)];
 
-      // === MEDIUM-HYPE WRAITH ANNOUNCEMENTS ===
+      // === MEDIUM HYPE WRAITH ANNOUNCEMENTS (no duplicate @user lines) ===
       const announcements = [
         {
           title: "📡 A Signal Rises",
-          body: (id) =>
-            `**<@${id}> is live.**\n\n` +
+          body: (name) =>
+            `**${name} is live.**\n\n` +
             `The Wraith feels the stream ignite and turns her gaze toward it.\n` +
-            `If you are up for **watching**, **playing**, or just **lurking in the dark**, come through.\n\n` +
+            `Come **watch**, come **play**, or come **lurk** and feed the chaos.\n\n` +
             `The door is open. The current is warm.`
         },
         {
           title: "🕯️ The Wraith Calls",
-          body: (id) =>
-            `**<@${id}> has gone live.**\n\n` +
-            `A new broadcast has lit the hull.\n` +
-            `Pull up a chair, drop into VC, or drift in to watch the chaos unfold.\n\n` +
-            `Either way, you are welcome in the signal.`
+          body: (name) =>
+            `**${name} has gone live.**\n\n` +
+            `A new broadcast lights the hull.\n` +
+            `Drop into VC, pull up a seat, or drift in to watch the madness unfold.\n\n` +
+            `All hands welcome in the signal.`
         },
         {
           title: "⚡ The Current Shifts",
-          body: (id) =>
-            `**<@${id}> is streaming now.**\n\n` +
-            `The ship hums with it. The static parts for it.\n` +
-            `Come join the run, come watch the run, or come heckle lovingly from the shadows.\n\n` +
-            `All hands welcome.`
+          body: (name) =>
+            `**${name} is streaming now.**\n\n` +
+            `The ship hums with it.\n` +
+            `If you are up for a run, a watch, or a bit of friendly heckling, get in here.\n\n` +
+            `The stream is open.`
         },
         {
           title: "🌘 A Window Opens",
-          body: (id) =>
-            `**<@${id}> just went live.**\n\n` +
+          body: (name) =>
+            `**${name} is live right now.**\n\n` +
             `The Wraith has opened the way.\n` +
-            `If you want in, step through. If you want to watch, settle in.\n\n` +
+            `Step through to **play**, settle in to **watch**, or just drop by and say hi.\n\n` +
             `The signal is strong tonight.`
         }
       ];
 
       const pick = announcements[Math.floor(Math.random() * announcements.length)];
+      const bodyText = pick.body(member.displayName);
 
       // === EMBED ===
       const embed = new EmbedBuilder()
         .setTitle(pick.title)
-        .setDescription(
-          `${glyphLine}\n\n` +
-          `@here <@${member.id}>\n\n` +
-          pick.body(member.id)
-        )
+        .setDescription(`${flare}\n\n${bodyText}`)
         .setColor(0x5a1e6d)
         .setFooter({ text: "The Wraith listens…" })
         .setTimestamp();
@@ -125,11 +126,15 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
           .setURL(vcLink)
       );
 
+      // Put pings in content so Discord always notifies
       await announceChannel.send({
+        content: `@here <@${member.id}>`,
         embeds: [embed],
-        components: [row]
+        components: [row],
+        allowedMentions: { parse: ["everyone", "users"] }
       });
     }
+
   } catch (err) {
     console.error("[WRAITH STREAM ERROR]", err);
   }
