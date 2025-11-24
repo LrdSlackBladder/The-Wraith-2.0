@@ -9,8 +9,6 @@ const {
   ButtonStyle
 } = require('discord.js');
 
-const cron = require("node-cron");
-
 // === CLIENT ===
 const client = new Client({
   intents: [
@@ -24,11 +22,11 @@ const client = new Client({
 const EVENT_ANNOUNCE_CHANNEL_ID  = '1440692270989967442'; // general event announcements
 const STREAM_ANNOUNCE_CHANNEL_ID = '1339149195688280085'; // stream announcements
 
-// Cooldown per user so toggling stream on/off does not spam
+// Stream toggle cooldown per user
 const STREAM_USER_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 const streamCooldowns = new Map();
 
-// Track which scheduled events we've already announced (once per event version)
+// Event announcement memory (to prevent repeats)
 const announcedEvents = new Map();
 const ANNOUNCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -73,12 +71,11 @@ function wraithLineForEvent() {
 client.once('ready', () => {
   console.log(`[WRAITH BOT] Online as ${client.user.tag}`);
 
-  // === SCHEDULED EVENT ANNOUNCER ===
-  // Checks every minute, announces ONCE when an event enters the 6-hour window.
-  cron.schedule("* * * * *", async () => {
+  // === SCHEDULED EVENT ANNOUNCER (NO CRON, SAFE FOR RAILWAY) ===
+  setInterval(async () => {
     const now = Date.now();
 
-    // Cleanup old cache entries
+    // Cleanup old entries from memory cache
     for (const [key, ts] of announcedEvents.entries()) {
       if (now - ts > ANNOUNCE_CACHE_TTL_MS) announcedEvents.delete(key);
     }
@@ -101,7 +98,6 @@ client.once('ready', () => {
         const start = ev.scheduledStartTimestamp;
         const diff = start - now;
 
-        // Only care about events within next 6 hours
         const withinSixHours = diff > 0 && diff <= 6 * 60 * 60 * 1000;
         if (!withinSixHours) continue;
 
@@ -149,7 +145,7 @@ client.once('ready', () => {
         announcedEvents.set(announceKey, now);
       }
     }
-  });
+  }, 60 * 1000); // Runs every 60 seconds
 });
 
 // === STREAM DETECTION ===
@@ -158,14 +154,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     const member = newState.member;
     if (!member) return;
 
-    // Must be in a VC to be streaming
     if (!newState.channelId) return;
 
-    // Discord can report Go Live as streaming or selfStream depending on client
     const wasStreaming = !!(oldState.streaming || oldState.selfStream);
     const isStreaming  = !!(newState.streaming || newState.selfStream);
 
-    // Only trigger when streaming STARTS
     if (!wasStreaming && isStreaming) {
       const now = Date.now();
       const last = streamCooldowns.get(member.id) || 0;
@@ -176,14 +169,12 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
       if (!announceChannel?.isTextBased()) return;
 
-      // Direct link to the VC they are streaming in
       const guildId = newState.guild.id;
       const voiceChannelId = newState.channelId;
       const vcLink = `https://discord.com/channels/${guildId}/${voiceChannelId}`;
 
       const flare = pick(glyphs);
 
-      // Expanded organic Wraith stream announcements
       const announcements = [
         {
           title: "📡 A Signal Rises",
@@ -259,7 +250,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         allowedMentions: { parse: ["everyone", "users"] }
       });
     }
-
   } catch (err) {
     console.error("[WRAITH STREAM ERROR]", err);
   }
