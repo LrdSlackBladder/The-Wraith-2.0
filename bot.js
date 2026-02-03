@@ -275,5 +275,23 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   }
 });
 
+      // Streams: auto-delete after 4 hours
+      const sent = await announceChannel.send({
+        content: `@here <@${member.id}>`,
+        embeds: [embed],
+        components: [row],
+        allowedMentions: { parse: ["everyone", "users"] }
+      });
+
+      setTimeout(() => {
+        sent.delete().catch(() => {});
+      }, STREAM_AUTO_DELETE_MS);
+    }
+
+  } catch (err) {
+    console.error("[WRAITH STREAM ERROR]", err);
+  }
+});
+
 // === LOGIN ===
 client.login(process.env.DISCORD_TOKEN);
