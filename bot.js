@@ -215,7 +215,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       const announcements = [
         {
           title: "📡 A Signal Rises",
-          body: (name) =>
+          body: 
             `**${name} is live.**\n\n` +
             `The hull hums and the air shifts. Something good is starting.\n` +
             `Come to **watch**, come to **play**, or drift in and keep them company.\n\n` +
@@ -223,7 +223,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         },
         {
           title: "🕯️ The Wraith Calls",
-          body: (name) =>
+          body: 
             `**${name} has gone live.**\n\n` +
             `A fresh broadcast lights the deck.\n` +
             `If your hands are free, jump in. If your brain is tired, lurk and breathe.\n\n` +
@@ -231,7 +231,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         },
         {
           title: "⚡ The Current Shifts",
-          body: (name) =>
+          body: 
             `**${name} is streaming now.**\n\n` +
             `You can feel it. The ship does.\n` +
             `Pull up a seat, hop into VC, or roll in late with snacks and chaos.\n\n` +
@@ -239,7 +239,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         },
         {
           title: "🌘 A Window Opens",
-          body: (name) =>
+          body: 
             `**${name} is live right now.**\n\n` +
             `A little tear in the routine. A place to gather.\n` +
             `Drop in for a run, a laugh, or a quiet watch while the world slows down.\n\n` +
@@ -247,7 +247,55 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         },
         {
           title: "🔥 The Perch Assembles",
-          body: (name) =>
+          body: 
             `**${name} just lit the signal.**\n\n` +
             `No schedule, no warning, just that familiar spark.\n` +
-            `If you are around, come be part of it. If not, ca
+            `If you are around, come be part of it. If not, catch the echo later.\n\n` +
+            `The stream is alive.`
+        },
+        {
+          title: "🛰️ Broadcast Detected",
+          body: 
+            `**${name} is live.**\n\n` +
+            `The Wraith caught it the moment it flared.\n` +
+            `Whether you join to play or lurk, your presence feeds the vibe.\n\n` +
+            `Signal is steady. Come through.`
+        }
+      ];
+
+      const pickAnnounce = pick(announcements);
+      const bodyText = pickAnnounce.body(member.displayName);
+
+      const embed = new EmbedBuilder()
+        .setTitle(pickAnnounce.title)
+        .setDescription(`${flare}\n\n${bodyText}`)
+        .setColor(0x5a1e6d)
+        .setFooter({ text: "The Wraith listens…" })
+        .setTimestamp();
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("Join the Stream")
+          .setStyle(ButtonStyle.Link)
+          .setURL(vcLink)
+      );
+
+      // Streams: auto-delete after 4 hours
+      const sent = await announceChannel.send({
+        content: `@here <@${member.id}>`,
+        embeds: [embed],
+        components: [row],
+        allowedMentions: { parse: ["everyone", "users"] }
+      });
+
+      setTimeout(() => {
+        sent.delete().catch(() => {});
+      }, STREAM_AUTO_DELETE_MS);
+    }
+  } catch (err) {
+    console.error("[WRAITH STREAM ERROR]", err);
+  }
+});
+
+// === LOGIN ===
+client.login(process.env.DISCORD_TOKEN);
