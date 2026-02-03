@@ -26,8 +26,12 @@ const STREAM_ANNOUNCE_CHANNEL_ID = '1339149195688280085'; // stream announcement
 const STREAM_USER_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 const streamCooldowns = new Map();
 
+// Auto-delete stream announcements (general) after 4 hours
+const STREAM_AUTO_DELETE_MS = 4 * 60 * 60 * 1000; // 4 hours
+
 // Event announcement memory (to prevent repeats)
 const announcedEvents = new Map();
+// This is NOT the announce timing. It is how long we remember announced events to prevent repeats.
 const ANNOUNCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // === STYLE POOLS ===
@@ -65,6 +69,19 @@ function wraithLineForEvent() {
     "A soft pull in the signal says: remember this time.",
     "The hours tilt toward us. Let the thought settle early."
   ]);
+}
+
+// Helper: fetch channel safely (cache first, then API)
+async function getTextChannel(guild, channelId) {
+  let ch = guild.channels.cache.get(channelId);
+  if (!ch) {
+    try {
+      ch = await guild.channels.fetch(channelId);
+    } catch {
+      ch = null;
+    }
+  }
+  return ch?.isTextBased() ? ch : null;
 }
 
 // === READY ===
@@ -105,8 +122,8 @@ client.once('ready', () => {
         const announceKey = `${ev.id}:${start}`;
         if (announcedEvents.has(announceKey)) continue;
 
-        const announceChannel = guild.channels.cache.get(EVENT_ANNOUNCE_CHANNEL_ID);
-        if (!announceChannel?.isTextBased()) continue;
+        const announceChannel = await getTextChannel(guild, EVENT_ANNOUNCE_CHANNEL_ID);
+        if (!announceChannel) continue;
 
         const flare = pick(glyphs);
         const line  = wraithLineForEvent();
@@ -147,9 +164,10 @@ client.once('ready', () => {
           );
         }
 
-        const row = new ActionRowBuilder().addComponents(buttons);
+        // IMPORTANT: spread buttons into addComponents
+        const row = new ActionRowBuilder().addComponents(...buttons);
 
-        // Content includes @here ping and the event card link in chat
+        // Events: DO NOT auto-delete (handled by your other bot)
         await announceChannel.send({
           content:
             `@here\n` +
@@ -185,7 +203,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       if (now - last < STREAM_USER_COOLDOWN_MS) return;
       streamCooldowns.set(member.id, now);
 
-      const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID);
+      const announceChannel = await client.channels.fetch(STREAM_ANNOUNCE_CHANNEL_ID).catch(() => null);
       if (!announceChannel?.isTextBased()) return;
 
       const guildId = newState.guild.id;
@@ -232,66 +250,4 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
           body: (name) =>
             `**${name} just lit the signal.**\n\n` +
             `No schedule, no warning, just that familiar spark.\n` +
-            `If you are around, come be part of it. If not, catch the echo later.\n\n` +
-            `The stream is alive.`
-        },
-        {
-          title: "🛰️ Broadcast Detected",
-          body: (name) =>
-            `**${name} is live.**\n\n` +
-            `The Wraith caught it the moment it flared.\n` +
-            `Whether you join to play or lurk, your presence feeds the vibe.\n\n` +
-            `Signal is steady. Come through.`
-        }
-      ];
-
-      const pickAnnounce = pick(announcements);
-      const bodyText = pickAnnounce.body(member.displayName);
-
-      const embed = new EmbedBuilder()
-        .setTitle(pickAnnounce.title)
-        .setDescription(`${flare}\n\n${bodyText}`)
-        .setColor(0x5a1e6d)
-        .setFooter({ text: "The Wraith listens…" })
-        .setTimestamp();
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setLabel("Join the Stream")
-          .setStyle(ButtonStyle.Link)
-          .setURL(vcLink)
-      );
-
-      await announceChannel.send({
-        content: `@here <@${member.id}>`,
-        embeds: [embed],
-        components: [row],
-        allowedMentions: { parse: ["everyone", "users"] }
-      });
-    }
-
-  } catch (err) {
-    console.error("[WRAITH STREAM ERROR]", err);
-  }
-});
-
-      // Streams: auto-delete after 4 hours
-      const sent = await announceChannel.send({
-        content: `@here <@${member.id}>`,
-        embeds: [embed],
-        components: [row],
-        allowedMentions: { parse: ["everyone", "users"] }
-      });
-
-      setTimeout(() => {
-        sent.delete().catch(() => {});
-      }, STREAM_AUTO_DELETE_MS);
-    }
-
-  } catch (err) {
-    console.error("[WRAITH STREAM ERROR]", err);
-  }
-});
-
-// === LOGIN ===
-client.login(process.env.DISCORD_TOKEN);
+            `If you are around, come be part of it. If not, ca
